@@ -14,6 +14,7 @@ if __name__ == "__main__":
     player = c.Player(screen_width, screen_height)
     delta_time = 0
     bullets = []
+    enemies = [c.Enemy(i * 50, 0) for i in range(4, 8)]
     running = True
     clock = pygame.time.Clock()
     while running:
@@ -32,10 +33,18 @@ if __name__ == "__main__":
 
         for bullet in bullets[:]:
             bullet.move()
+
+        for enemy in enemies[:]:
+            enemy.move()
+
         screen.fill((0, 0, 0))
         screen.blit(player.image, player.rect)
 
         for bullet in bullets:
             bullet.draw(screen)
+
+        for enemy in enemies:
+            screen.blit(enemy.image, enemy.rect)
+
         clock.tick(30)
         pygame.display.update()
