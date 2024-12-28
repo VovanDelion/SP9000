@@ -1,9 +1,10 @@
 import pygame
 
 
-class Player:
+class Player(pygame.sprite.Sprite):
     """Класс управляемого персонажа"""
     def __init__(self, screen_width, screen_height):
+        super().__init__()
         self.image = pygame.image.load('sprites/player.png').convert_alpha()
         self.rect = self.image.get_rect()
         self.screen_width = screen_width
@@ -11,6 +12,7 @@ class Player:
         self.rect.y = screen_height - 30
         self.clock = pygame.time.Clock()
         self.delta_time = self.clock.tick(30)
+
 
     def move(self, v):
         """Перемещение персонажа по указанной скорости"""
@@ -25,15 +27,19 @@ class Player:
         return self.rect.x + 5, self.rect.y
 
 
-class Bullet():
+class Bullet(pygame.sprite.Sprite):
     """Класс пули активного персонажа"""
-    def __init__(self, player):
+    def __init__(self, player, bullets):
+        super().__init__(bullets)
         self.image = pygame.image.load('sprites/bullet.png').convert_alpha()
         self.rect = self.image.get_rect()
+        self.mask = pygame.mask.from_surface(self.image)
         self.rect.x, self.rect.y =  player.get_xy()
         self.speed = 10
         self.active = False
 
+    def update(self):
+        self.move()
 
     def move(self):
         """Перемещение пули"""
@@ -43,17 +49,23 @@ class Bullet():
         s.blit(self.image, self.rect)
 
 
-class Enemy():
+class Enemy(pygame.sprite.Sprite):
     """Класс врага"""
-    def __init__(self, x, y):
+    def __init__(self, x, y, enemies):
+        super().__init__(enemies)
         self.image = pygame.image.load('sprites/enemy.png').convert_alpha()
         self.rect = self.image.get_rect()
+        self.mask = pygame.mask.from_surface(self.image)
         self.rect.x = x
         self.rect.y = y
         self.speed = 0.1
         self.clock = pygame.time.Clock()
         self.delta_time = self.clock.tick(60)
 
+    def update(self, bul):
+        self.move()
+
     def move(self):
         """Перемещение врага"""
         self.rect.y += self.speed * self.delta_time
+

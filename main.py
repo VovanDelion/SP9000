@@ -1,6 +1,6 @@
 import pygame
 import classes as c
-from classes import Bullet
+
 
 if __name__ == "__main__":
     pygame.init()
@@ -9,12 +9,27 @@ if __name__ == "__main__":
     screen_height = 600
     screen = pygame.display.set_mode((screen_width, screen_height))
     pygame.display.set_caption("SP9000")
-    player_v = 5
 
     player = c.Player(screen_width, screen_height)
+    player_v = 5
+
+    bullets = pygame.sprite.Group()
+    enemies = pygame.sprite.Group()
+
+
+    [c.Enemy(i, 0, enemies) for i in range(50, 450, 100)]
+
+    score = 0
+
+    font_name = pygame.font.match_font('arial')
+    def draw_text(surf, text, size, x, y):
+        font = pygame.font.Font(font_name, size)
+        text_surface = font.render(text, True, (255, 255, 255))
+        text_rect = text_surface.get_rect()
+        text_rect.midtop = (x, y)
+        surf.blit(text_surface, text_rect)
+
     delta_time = 0
-    bullets = []
-    enemies = [c.Enemy(i * 50, 0) for i in range(4, 8)]
     running = True
     clock = pygame.time.Clock()
     while running:
@@ -23,7 +38,7 @@ if __name__ == "__main__":
                 running = False
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
-                    bullets.append(Bullet(player))
+                    c.Bullet(player, bullets)
 
         keys = pygame.key.get_pressed()
         if keys[pygame.K_LEFT]:
@@ -31,20 +46,20 @@ if __name__ == "__main__":
         elif keys[pygame.K_RIGHT]:
             player.move(player_v)
 
-        for bullet in bullets[:]:
-            bullet.move()
-
-        for enemy in enemies[:]:
-            enemy.move()
-
         screen.fill((0, 0, 0))
         screen.blit(player.image, player.rect)
 
-        for bullet in bullets:
-            bullet.draw(screen)
+        bullets.update()
+        bullets.draw(screen)
 
-        for enemy in enemies:
-            screen.blit(enemy.image, enemy.rect)
+        enemies.update(bullets)
+        enemies.draw(screen)
+
+        col = pygame.sprite.groupcollide(bullets, enemies, True, True)
+        for hit in col:
+            score += 50
+
+        draw_text(screen, str(score), 18, 20, 10)
 
         clock.tick(30)
         pygame.display.update()
