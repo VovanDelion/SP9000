@@ -36,7 +36,6 @@ class Bullet(pygame.sprite.Sprite):
         self.mask = pygame.mask.from_surface(self.image)
         self.rect.x, self.rect.y =  obj.get_xy()
         self.speed = 10
-        self.active = False
 
     def update(self):
         self.move()
@@ -45,9 +44,22 @@ class Bullet(pygame.sprite.Sprite):
         """Перемещение пули"""
         self.rect.y -= self.speed
 
-    def draw(self, s):
-        s.blit(self.image, self.rect)
+class EBullet(pygame.sprite.Sprite):
+    """Класс пули вражеского персонажа"""
+    def __init__(self, obj, ebullets):
+        super().__init__(ebullets)
+        self.image = pygame.image.load('sprites/ebullet.png').convert_alpha()
+        self.rect = self.image.get_rect()
+        self.mask = pygame.mask.from_surface(self.image)
+        self.rect.x, self.rect.y =  obj.get_xy()
+        self.speed = 6
 
+    def update(self):
+        self.move()
+
+    def move(self):
+        """Перемещение пули"""
+        self.rect.y += self.speed
 
 class Barrier(pygame.sprite.Sprite):
     """Класс барьера"""
@@ -105,8 +117,11 @@ class Enemy(pygame.sprite.Sprite):
     def update(self):
         self.move()
 
-
     def move(self):
         """Перемещение врага"""
         self.rect.y += self.speed * self.delta_time
+
+    def get_xy(self):
+        """Возвращает координаты персонажа"""
+        return self.rect.x + 5, self.rect.y
 

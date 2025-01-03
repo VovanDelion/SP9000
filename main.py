@@ -1,3 +1,4 @@
+import random
 import pygame
 import classes as c
 
@@ -60,8 +61,14 @@ if __name__ == "__main__":
         barriers.update()
         barriers.draw(screen)
 
+        ebullets.update()
+        ebullets.draw(screen)
+
         enemies.update()
         enemies.draw(screen)
+        for enemy in enemies:
+            if pygame.time.get_ticks() % 200 == 0:
+                c.EBullet(enemy, ebullets)
 
         bases.update()
         bases.draw(screen)
@@ -80,6 +87,6 @@ if __name__ == "__main__":
         pygame.sprite.groupcollide(ebullets, barriers, True, True)
 
         draw_text(screen, str(score), 18, 20, 10)
-
+        draw_text(screen, str(pygame.time.get_ticks()), 18, 20, 30)
         clock.tick(30)
         pygame.display.update()
