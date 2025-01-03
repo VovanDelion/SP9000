@@ -15,9 +15,12 @@ if __name__ == "__main__":
 
     bullets = pygame.sprite.Group()
     enemies = pygame.sprite.Group()
+    ebullets = pygame.sprite.Group()
+    bases = pygame.sprite.Group()
+    barriers = pygame.sprite.Group()
 
-
-    [c.Enemy(i, 0, enemies) for i in range(50, 450, 100)]
+    [c.Enemy(i, 0, enemies) for i in range(50, 550, 100)]
+    [c.Base(i, 510, bases) for i in range(100, 550, 128)]
 
     score = 0
 
@@ -36,14 +39,16 @@ if __name__ == "__main__":
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_SPACE:
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1:
                     c.Bullet(player, bullets)
+                if event.button == 3:
+                    c.Barrier(player, barriers)
 
         keys = pygame.key.get_pressed()
-        if keys[pygame.K_LEFT]:
+        if keys[pygame.K_a]:
             player.move(-player_v)
-        elif keys[pygame.K_RIGHT]:
+        elif keys[pygame.K_d]:
             player.move(player_v)
 
         screen.fill((0, 0, 0))
@@ -52,12 +57,27 @@ if __name__ == "__main__":
         bullets.update()
         bullets.draw(screen)
 
-        enemies.update(bullets)
+        barriers.update()
+        barriers.draw(screen)
+
+        enemies.update()
         enemies.draw(screen)
+
+        bases.update()
+        bases.draw(screen)
 
         col = pygame.sprite.groupcollide(bullets, enemies, True, True)
         for hit in col:
             score += 50
+
+        col1 = pygame.sprite.groupcollide(bases, enemies, False, True)
+        for hit in col1:
+            hit.hp -= 5
+        col2 = pygame.sprite.groupcollide(bases, ebullets, False, True)
+        for hit in col2:
+            hit.hp -= 5
+
+        pygame.sprite.groupcollide(ebullets, barriers, True, True)
 
         draw_text(screen, str(score), 18, 20, 10)
 
