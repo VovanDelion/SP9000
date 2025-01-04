@@ -11,16 +11,18 @@ if __name__ == "__main__":
     screen = pygame.display.set_mode((screen_width, screen_height))
     pygame.display.set_caption("SP9000")
 
-    player = c.Player(screen_width, screen_height)
-    player_v = 5
-
     bullets = pygame.sprite.Group()
     enemies = pygame.sprite.Group()
     ebullets = pygame.sprite.Group()
     bases = pygame.sprite.Group()
     barriers = pygame.sprite.Group()
+    power = pygame.sprite.Group()
+    portals = pygame.sprite.Group()
 
-    [c.Enemy(i, 0, enemies) for i in range(50, 550, 100)]
+    player = c.Player(screen_width, screen_height, bullets, barriers)
+    player_v = 5
+
+    [c.Enemy(i, 0, enemies, ebullets) for i in range(50, 550, 100)]
     [c.Base(i, 510, bases) for i in range(100, 550, 128)]
 
     score = 0
@@ -42,9 +44,9 @@ if __name__ == "__main__":
                 running = False
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
-                    c.Bullet(player, bullets)
+                    player.shoot()
                 if event.button == 3:
-                    c.Barrier(player, barriers)
+                    player.deffen()
 
         keys = pygame.key.get_pressed()
         if keys[pygame.K_a]:
@@ -54,6 +56,7 @@ if __name__ == "__main__":
 
         screen.fill((0, 0, 0))
         screen.blit(player.image, player.rect)
+        player.update()
 
         bullets.update()
         bullets.draw(screen)
@@ -66,16 +69,44 @@ if __name__ == "__main__":
 
         enemies.update()
         enemies.draw(screen)
-        for enemy in enemies:
-            if pygame.time.get_ticks() % 200 == 0:
-                c.EBullet(enemy, ebullets)
 
         bases.update()
         bases.draw(screen)
 
+        power.update()
+        power.draw(screen)
+
+        portals.update()
+        portals.draw(screen)
+
         col = pygame.sprite.groupcollide(bullets, enemies, True, True)
         for hit in col:
             score += 50
+            if random.random() > 0.1:
+                power.add(c.Pow(hit.rect.center))
+
+        hits = pygame.sprite.spritecollide(player, power, True)
+        for hit in hits:
+            if hit.type == 'rem':
+                for b in bases:
+                    b.hp += 20
+                    if b.hp > 100:
+                        b.hp = 100
+            if hit.type == 'el_pow':
+                player.powerup()
+            if hit.type == 'port':
+                p1 = c.Portal(20, 560)
+                p2 = c.Portal(580, 560)
+                p2.image = pygame.transform.flip(p2.image, True, False)
+                portals.add(p1)
+                portals.add(p2)
+
+        hits2 = pygame.sprite.spritecollide(player, portals, False)
+        for hit in hits2:
+            if hit == p1:
+                player.rect.x = p2.rect.x - 15
+            if hit == p2:
+                player.rect.x = p1.rect.x + 15
 
         col1 = pygame.sprite.groupcollide(bases, enemies, False, True)
         for hit in col1:
