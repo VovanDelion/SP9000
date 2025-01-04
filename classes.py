@@ -6,6 +6,8 @@ p_images = dict()
 p_images['rem'] = 'sprites/rem.png'
 p_images['el_pow'] = 'sprites/electro_pow.png'
 p_images['port'] = 'sprites/portal_pow.png'
+p_images['laser'] = 'sprites/laser_pow.png'
+p_images['dbull'] = 'sprites/dbull_pow.png'
 
 POWERUP_TIME = 5000
 PORTAL_TIME = 10000
@@ -23,14 +25,20 @@ class Player(pygame.sprite.Sprite):
         self.barr = barr
         self.last_shot = 0
         self.shoot_delay = 300
-        self.power = 1
+        self.power = 4
         self.power_time = pygame.time.get_ticks()
         self.clock = pygame.time.Clock()
         self.delta_time = self.clock.tick(30)
 
     def update(self):
-        if self.power >= 2 and pygame.time.get_ticks() - self.power_time > PORTAL_TIME:
-            self.power -= 1
+        if self.power == 4 and pygame.time.get_ticks() - self.power_time > POWERUP_TIME:
+            self.power = 1
+            self.power_time = pygame.time.get_ticks()
+        elif self.power == 3 and pygame.time.get_ticks() - self.power_time > POWERUP_TIME:
+            self.power = 1
+            self.power_time = pygame.time.get_ticks()
+        elif self.power == 2 and pygame.time.get_ticks() - self.power_time > POWERUP_TIME:
+            self.power = 1
             self.power_time = pygame.time.get_ticks()
 
     def move(self, v):
@@ -41,27 +49,49 @@ class Player(pygame.sprite.Sprite):
         if self.rect.x > self.screen_width - self.rect.width:
             self.rect.x = self.screen_width - self.rect.width
 
-    def powerup(self):
-        self.power += 1
+    def electrup(self):
+        self.power = 2
+        self.power_time = pygame.time.get_ticks()
+
+    def laserup(self):
+        self.power = 3
+        self.power_time = pygame.time.get_ticks()
+
+    def dbullup(self):
+        self.power = 4
         self.power_time = pygame.time.get_ticks()
 
     def shoot(self):
+        if self.power == 3:
+            b = Bullet(self.rect.centerx - 1, self.rect.centery)
+            b.image = pygame.image.load('sprites/laser.png').convert_alpha()
+            b.rect.y -= 6
+            self.bullets.add(b)
         now = pygame.time.get_ticks()
         if now - self.last_shot > self.shoot_delay:
             self.last_shot = now
             if self.power == 1:
                 bullet = Bullet(self.rect.centerx, self.rect.top)
                 self.bullets.add(bullet)
-            if self.power == 2:
+            elif self.power == 2:
                 b1 = Bullet(self.rect.centerx - 7, self.rect.centery)
                 b1.image = pygame.image.load('sprites/electro_bull.png').convert_alpha()
+                b1.speedx = -10
+                b1.image = pygame.transform.rotate(b1.image, 30)
                 b2 = Bullet(self.rect.centerx - 1, self.rect.centery)
                 b2.image = pygame.image.load('sprites/electro_bull.png').convert_alpha()
                 b3 = Bullet(self.rect.centerx + 5, self.rect.centery)
                 b3.image = pygame.image.load('sprites/electro_bull.png').convert_alpha()
+                b3.image = pygame.transform.rotate(b3.image, -30)
+                b3.speedx = 10
                 self.bullets.add(b1)
                 self.bullets.add(b2)
                 self.bullets.add(b3)
+            elif self.power == 4:
+                b1 = DoubleB(self.rect.centerx - 1, self.rect.centery, -1)
+                b2 = DoubleB(self.rect.centerx - 1, self.rect.centery, 1)
+                self.bullets.add(b1)
+                self.bullets.add(b2)
 
     def deffen(self):
         self.barr.add(Barrier(self.rect.centerx - 1, self.rect.y))
@@ -71,7 +101,7 @@ class Pow(pygame.sprite.Sprite):
     """Класс бафов для игрока"""
     def __init__(self, center):
         super().__init__()
-        self.type = random.choice(['rem', 'el_pow', 'port'])
+        self.type = random.choice(['rem', 'el_pow', 'port', 'laser', 'dbull'])
         self.image = pygame.image.load(p_images[self.type]).convert_alpha()
         self.rect = self.image.get_rect()
         self.rect.center = center
@@ -93,7 +123,7 @@ class Portal(pygame.sprite.Sprite):
         self.life_time = pygame.time.get_ticks()
 
     def update(self):
-        if pygame.time.get_ticks() - self.life_time > POWERUP_TIME:
+        if pygame.time.get_ticks() - self.life_time > PORTAL_TIME:
             self.kill()
 
 
@@ -104,8 +134,9 @@ class Bullet(pygame.sprite.Sprite):
         self.image = pygame.image.load('sprites/bullet.png').convert_alpha()
         self.rect = self.image.get_rect()
         self.mask = pygame.mask.from_surface(self.image)
-        self.rect.x, self.rect.y =  x, y
-        self.speed = 10
+        self.rect.x, self.rect.y = self.start_x, _ =  x, y
+        self.speedy = 20
+        self.speedx = 0
 
     def update(self):
         self.move()
@@ -114,7 +145,26 @@ class Bullet(pygame.sprite.Sprite):
 
     def move(self):
         """Перемещение пули"""
-        self.rect.y -= self.speed
+        self.rect.y -= self.speedy
+        self.rect.x += self.speedx
+
+class DoubleB(Bullet):
+    """Класс двойной пули активного персонажа"""
+    def __init__(self, x, y, vec):
+        super().__init__(x, y)
+        self.image = pygame.image.load("sprites/dbull.png")
+        self.speedy = 10
+        self.speedx = 3
+        self.speedx *= vec
+
+    def update(self):
+        self.move()
+        if self.rect.x <= self.start_x - 10:
+            self.speedx = -self.speedx
+        elif self.rect.x >= self.start_x + 8:
+            self.speedx = -self.speedx
+        if self.rect.top <= 0:
+            self.kill()
 
 class EBullet(pygame.sprite.Sprite):
     """Класс пули вражеского персонажа"""

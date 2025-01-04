@@ -49,10 +49,14 @@ if __name__ == "__main__":
                     player.deffen()
 
         keys = pygame.key.get_pressed()
+        buttons = pygame.mouse.get_pressed()
         if keys[pygame.K_a]:
             player.move(-player_v)
         elif keys[pygame.K_d]:
             player.move(player_v)
+        if buttons[0]:
+            if player.power == 3:
+                player.shoot()
 
         screen.fill((0, 0, 0))
         screen.blit(player.image, player.rect)
@@ -92,9 +96,13 @@ if __name__ == "__main__":
                     b.hp += 20
                     if b.hp > 100:
                         b.hp = 100
-            if hit.type == 'el_pow':
-                player.powerup()
-            if hit.type == 'port':
+            elif hit.type == 'el_pow':
+                player.electrup()
+            elif hit.type == 'laser':
+                player.laserup()
+            elif hit.type == 'dbull':
+                player.dbullup()
+            elif hit.type == 'port':
                 p1 = c.Portal(20, 560)
                 p2 = c.Portal(580, 560)
                 p2.image = pygame.transform.flip(p2.image, True, False)
