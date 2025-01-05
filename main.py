@@ -14,6 +14,7 @@ if __name__ == "__main__":
     bullets = pygame.sprite.Group()
     enemies = pygame.sprite.Group()
     ebullets = pygame.sprite.Group()
+    elasers = pygame.sprite.Group()
     bases = pygame.sprite.Group()
     barriers = pygame.sprite.Group()
     power = pygame.sprite.Group()
@@ -25,10 +26,11 @@ if __name__ == "__main__":
 
     last_line = c.LastLine()
     ls.add(last_line)
-    [c.Enemy(i, 60, enemies, ebullets) for i in range(100, 500, 90)]
+    [c.Enemy(i, 90, enemies, ebullets) for i in range(100, 500, 90)]
     [c.Base(i, 510, bases) for i in range(40, 550, 110)]
-    c.Enemy2(250, 30, enemies, ebullets)
-    c.Enemy2(350, 30, enemies, ebullets)
+    c.Enemy2(250, 60, enemies, ebullets)
+    c.Enemy2(350, 60, enemies, ebullets)
+    c.Enemy3(screen_width // 2, 0, enemies, elasers)
 
     score = 0
 
@@ -50,6 +52,14 @@ if __name__ == "__main__":
         fill_rect = pygame.Rect(x, y, fill, BAR_HEIGHT)
         pygame.draw.rect(surf, (0, 255, 0), fill_rect)
         pygame.draw.rect(surf, (255, 255, 255), outline_rect, 2)
+
+    def win():
+        screen.fill((0, 0, 0))
+        draw_text(screen, "Ура победа!", 64, screen_width / 2, screen_height / 2.5)
+        draw_text(screen, f"Ваш результат: {score}", 32, screen_width / 2, screen_height / 1.8)
+        pygame.display.flip()
+        pygame.time.delay(3000)
+        pygame.quit()
 
     delta_time = 0
     running = True
@@ -86,6 +96,8 @@ if __name__ == "__main__":
 
         ebullets.update()
         ebullets.draw(screen)
+        elasers.update()
+        elasers.draw(screen)
 
         enemies.update()
         enemies.draw(screen)
@@ -99,9 +111,12 @@ if __name__ == "__main__":
         portals.update()
         portals.draw(screen)
 
-        col = pygame.sprite.groupcollide(bullets, enemies, True, True)
+        col = pygame.sprite.groupcollide(enemies, bullets, True, True)
         for hit in col:
-            score += 50
+            if hit.lv == 1 or hit.lv == 2:
+                score += 50
+            elif hit.lv == 3:
+                score += 100
             if random.random() > 0.1:
                 power.add(c.Pow(hit.rect.center))
 
@@ -141,10 +156,21 @@ if __name__ == "__main__":
         col3 = pygame.sprite.groupcollide(ls, ebullets, False, True)
         for hit in col3:
             player.hp -= 5
+        col4 = pygame.sprite.groupcollide(bases, elasers, False, True)
+        for hit in col4:
+            hit.hp -= 15
+        col5 = pygame.sprite.groupcollide(ls, elasers, False, True)
+        for hit in col5:
+            player.hp -= 15
 
         pygame.sprite.groupcollide(ebullets, barriers, True, True)
         draw_text(screen, str(score), 18, 20, 10)
         draw_text(screen, str(pygame.time.get_ticks()), 18, 20, 30)
+
+        if not enemies:
+            win()
+            running = False
+
         draw_shield_bar(screen, screen_width // 2 - 100, 5, player.hp)
         if player.hp <= 0:
             player.kill()

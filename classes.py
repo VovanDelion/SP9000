@@ -90,6 +90,7 @@ class Player(pygame.sprite.Sprite):
                 self.bullets.add(b3)
             elif self.power == 4:
                 b1 = DoubleB(self.rect.centerx - 1, self.rect.centery, -1)
+                b1.rect.y -= 7
                 b2 = DoubleB(self.rect.centerx - 1, self.rect.centery, 1)
                 self.bullets.add(b1)
                 self.bullets.add(b2)
@@ -235,18 +236,21 @@ class Base(pygame.sprite.Sprite):
             self.image = pygame.image.load('sprites/wall1.png').convert_alpha()
             self.image = pygame.transform.scale(self.image,
                                                 (self.image.get_width() * 4, self.image.get_height() * 2))
-        if self.hp <= 50:
+        if self.hp <= 60:
             self.image = pygame.image.load('sprites/wall2.png').convert_alpha()
             self.image = pygame.transform.scale(self.image,
                                                 (self.image.get_width() * 4, self.image.get_height() * 2))
-        if self.hp <= 20:
+        if self.hp <= 40:
             self.image = pygame.image.load('sprites/wall3.png').convert_alpha()
             self.image = pygame.transform.scale(self.image,
                                                 (self.image.get_width() * 4, self.image.get_height() * 2))
-        if self.hp <= 0:
+        if self.hp <= 20:
             self.image = pygame.image.load('sprites/wall4.png').convert_alpha()
             self.image = pygame.transform.scale(self.image,
                                                 (self.image.get_width() * 4, self.image.get_height() * 2))
+
+        if self.hp <= 0:
+            self.kill()
 
 
 
@@ -294,6 +298,11 @@ class Enemy(pygame.sprite.Sprite):
             elif self.lv == 2:
                 self.eb.add(EBullet(self.rect.centerx, self.rect.centery))
                 self.eb.add(EBullet(self.rect.centerx, self.rect.centery + 10))
+            elif self.lv == 3:
+                b = EBullet(self.rect.centerx + 3, self.rect.centery)
+                b.image = b.image = pygame.image.load('sprites/laser.png').convert_alpha()
+                b.image = pygame.transform.flip(b.image, False, True)
+                self.elasers.add(b)
 
 
 class Enemy2(Enemy):
@@ -304,3 +313,23 @@ class Enemy2(Enemy):
                                             (self.image.get_width() * 3, self.image.get_height() * 2))
         self.lv = 2
         self.shoot_delay = 2400
+
+
+class Enemy3(Enemy):
+    def __init__(self, x, y, enemies, eb):
+        super().__init__(x, y, enemies, eb)
+        self.image = pygame.image.load('sprites/enemy3.png').convert_alpha()
+        self.image = pygame.transform.scale(self.image,
+                                            (self.image.get_width() * 2, self.image.get_height() * 2))
+        self.lv = 3
+        self.shoot_delay = 1800
+
+    def shoot(self):
+        """Стрельба врага"""
+        now = pygame.time.get_ticks()
+        if now - self.last_shot > self.shoot_delay:
+            self.last_shot = now
+            b = EBullet(self.rect.centerx + 3, self.rect.centery)
+            b.image = b.image = pygame.image.load('sprites/laser.png').convert_alpha()
+            b.image = pygame.transform.flip(b.image, False, True)
+            self.eb.add(b)
