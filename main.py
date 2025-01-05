@@ -18,12 +18,17 @@ if __name__ == "__main__":
     barriers = pygame.sprite.Group()
     power = pygame.sprite.Group()
     portals = pygame.sprite.Group()
+    ls = pygame.sprite.Group()
 
     player = c.Player(screen_width, screen_height, bullets, barriers)
     player_v = 5
 
-    [c.Enemy(i, 0, enemies, ebullets) for i in range(50, 550, 100)]
-    [c.Base(i, 510, bases) for i in range(100, 550, 128)]
+    last_line = c.LastLine()
+    ls.add(last_line)
+    [c.Enemy(i, 60, enemies, ebullets) for i in range(100, 500, 90)]
+    [c.Base(i, 510, bases) for i in range(40, 550, 110)]
+    c.Enemy2(250, 30, enemies, ebullets)
+    c.Enemy2(350, 30, enemies, ebullets)
 
     score = 0
 
@@ -34,6 +39,17 @@ if __name__ == "__main__":
         text_rect = text_surface.get_rect()
         text_rect.midtop = (x, y)
         surf.blit(text_surface, text_rect)
+
+    def draw_shield_bar(surf, x, y, pct):
+        if pct < 0:
+            pct = 0
+        BAR_LENGTH = 200
+        BAR_HEIGHT = 20
+        fill = (pct / 500) * BAR_LENGTH
+        outline_rect = pygame.Rect(x, y, BAR_LENGTH, BAR_HEIGHT)
+        fill_rect = pygame.Rect(x, y, fill, BAR_HEIGHT)
+        pygame.draw.rect(surf, (0, 255, 0), fill_rect)
+        pygame.draw.rect(surf, (255, 255, 255), outline_rect, 2)
 
     delta_time = 0
     running = True
@@ -122,10 +138,16 @@ if __name__ == "__main__":
         col2 = pygame.sprite.groupcollide(bases, ebullets, False, True)
         for hit in col2:
             hit.hp -= 5
+        col3 = pygame.sprite.groupcollide(ls, ebullets, False, True)
+        for hit in col3:
+            player.hp -= 5
 
         pygame.sprite.groupcollide(ebullets, barriers, True, True)
-
         draw_text(screen, str(score), 18, 20, 10)
         draw_text(screen, str(pygame.time.get_ticks()), 18, 20, 30)
+        draw_shield_bar(screen, screen_width // 2 - 100, 5, player.hp)
+        if player.hp <= 0:
+            player.kill()
+            running = False
         clock.tick(30)
         pygame.display.update()

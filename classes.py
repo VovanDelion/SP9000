@@ -21,11 +21,12 @@ class Player(pygame.sprite.Sprite):
         self.screen_width = screen_width
         self.rect.x = screen_width / 2
         self.rect.y = screen_height - 30
+        self.hp = 500
         self.bullets = bullets
         self.barr = barr
         self.last_shot = 0
         self.shoot_delay = 300
-        self.power = 4
+        self.power = 1
         self.power_time = pygame.time.get_ticks()
         self.clock = pygame.time.Clock()
         self.delta_time = self.clock.tick(30)
@@ -97,6 +98,12 @@ class Player(pygame.sprite.Sprite):
         self.barr.add(Barrier(self.rect.centerx - 1, self.rect.y))
 
 
+class LastLine(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        self.rect = pygame.Rect(0, 600, 600, 1)
+
+
 class Pow(pygame.sprite.Sprite):
     """Класс бафов для игрока"""
     def __init__(self, center):
@@ -109,7 +116,7 @@ class Pow(pygame.sprite.Sprite):
 
     def update(self):
         self.rect.y += self.speedy
-        if self.rect.top > 600:
+        if self.rect.bottom > 600:
             self.kill()
 
 
@@ -117,6 +124,8 @@ class Portal(pygame.sprite.Sprite):
     def __init__(self, x, y):
         super().__init__()
         self.image = pygame.image.load('sprites/portal.png').convert_alpha()
+        self.image = pygame.transform.scale(self.image,
+                                            (self.image.get_width() * 2, self.image.get_height() * 2))
         self.rect = self.image.get_rect()
         self.mask = pygame.mask.from_surface(self.image)
         self.rect.x, self.rect.y = x, y
@@ -168,12 +177,13 @@ class DoubleB(Bullet):
 
 class EBullet(pygame.sprite.Sprite):
     """Класс пули вражеского персонажа"""
-    def __init__(self, obj, ebullets):
-        super().__init__(ebullets)
+    def __init__(self, x, y):
+        super().__init__()
         self.image = pygame.image.load('sprites/ebullet.png').convert_alpha()
+        self.type = "standart"
         self.rect = self.image.get_rect()
         self.mask = pygame.mask.from_surface(self.image)
-        self.rect.x, self.rect.y =  obj.get_xy()
+        self.rect.centerx, self.rect.y =  x, y
         self.speed = 6
 
     def update(self):
@@ -208,6 +218,8 @@ class Base(pygame.sprite.Sprite):
     def __init__(self, x, y, bases):
         super().__init__(bases)
         self.image = pygame.image.load('sprites/wall.png').convert_alpha()
+        self.image = pygame.transform.scale(self.image,
+                                            (self.image.get_width() * 4, self.image.get_height() * 2))
         self.rect = self.image.get_rect()
         self.mask = pygame.mask.from_surface(self.image)
         self.hp = 100
@@ -217,14 +229,26 @@ class Base(pygame.sprite.Sprite):
     def update(self):
         if self.hp <= 100:
             self.image = pygame.image.load('sprites/wall.png').convert_alpha()
+            self.image = pygame.transform.scale(self.image,
+                                                (self.image.get_width() * 4, self.image.get_height() * 2))
         if self.hp <= 80:
             self.image = pygame.image.load('sprites/wall1.png').convert_alpha()
+            self.image = pygame.transform.scale(self.image,
+                                                (self.image.get_width() * 4, self.image.get_height() * 2))
         if self.hp <= 50:
             self.image = pygame.image.load('sprites/wall2.png').convert_alpha()
+            self.image = pygame.transform.scale(self.image,
+                                                (self.image.get_width() * 4, self.image.get_height() * 2))
         if self.hp <= 20:
             self.image = pygame.image.load('sprites/wall3.png').convert_alpha()
+            self.image = pygame.transform.scale(self.image,
+                                                (self.image.get_width() * 4, self.image.get_height() * 2))
         if self.hp <= 0:
             self.image = pygame.image.load('sprites/wall4.png').convert_alpha()
+            self.image = pygame.transform.scale(self.image,
+                                                (self.image.get_width() * 4, self.image.get_height() * 2))
+
+
 
 
 class Enemy(pygame.sprite.Sprite):
@@ -232,12 +256,15 @@ class Enemy(pygame.sprite.Sprite):
     def __init__(self, x, y, enemies, eb):
         super().__init__(enemies)
         self.image = pygame.image.load('sprites/enemy.png').convert_alpha()
+        self.image = pygame.transform.scale(self.image,
+                                            (self.image.get_width() * 2, self.image.get_height() * 2))
         self.rect = self.image.get_rect()
         self.mask = pygame.mask.from_surface(self.image)
+        self.lv = 1
         self.eb = eb
         self.rect.x = x
         self.rect.y = y
-        self.speedx = 0.15
+        self.speedx = 0
         self.speedy = 0.1
         self.last_shot = 0
         self.shoot_delay = 1400
@@ -253,7 +280,7 @@ class Enemy(pygame.sprite.Sprite):
         """Перемещение врага"""
         self.rect.y += self.speedy * self.delta_time
         self.rect.x += self.speedx * self.delta_time
-        if self.rect.x >= 600 or self.rect.x <= 0:
+        if self.rect.right >= 500 or self.rect.left <= 100:
             self.speedx = -self.speedx
 
 
@@ -262,9 +289,18 @@ class Enemy(pygame.sprite.Sprite):
         now = pygame.time.get_ticks()
         if now - self.last_shot > self.shoot_delay:
             self.last_shot = now
-            EBullet(self, self.eb)
+            if self.lv == 1:
+                self.eb.add(EBullet(self.rect.centerx, self.rect.centery))
+            elif self.lv == 2:
+                self.eb.add(EBullet(self.rect.centerx, self.rect.centery))
+                self.eb.add(EBullet(self.rect.centerx, self.rect.centery + 10))
 
-    def get_xy(self):
-        """Возвращает координаты персонажа"""
-        return self.rect.x + 5, self.rect.y
 
+class Enemy2(Enemy):
+    def __init__(self, x, y, enemies, eb):
+        super().__init__(x, y, enemies, eb)
+        self.image = pygame.image.load('sprites/enemy2.png').convert_alpha()
+        self.image = pygame.transform.scale(self.image,
+                                            (self.image.get_width() * 3, self.image.get_height() * 2))
+        self.lv = 2
+        self.shoot_delay = 2400
