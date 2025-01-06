@@ -248,8 +248,9 @@ class Base(pygame.sprite.Sprite):
             self.image = pygame.image.load('sprites/wall4.png').convert_alpha()
             self.image = pygame.transform.scale(self.image,
                                                 (self.image.get_width() * 4, self.image.get_height() * 2))
-
         if self.hp <= 0:
+            self.kill()
+        if self.rect.left > 600:
             self.kill()
 
 
@@ -272,7 +273,6 @@ class Enemy(pygame.sprite.Sprite):
         self.speedy = 0.1
         self.last_shot = 0
         self.shoot_delay = 1400
-        self.power_time = pygame.time.get_ticks()
         self.clock = pygame.time.Clock()
         self.delta_time = self.clock.tick(60)
 
@@ -329,7 +329,96 @@ class Enemy3(Enemy):
         now = pygame.time.get_ticks()
         if now - self.last_shot > self.shoot_delay:
             self.last_shot = now
-            b = EBullet(self.rect.centerx + 3, self.rect.centery)
+            b = EBullet(self.rect.centerx + 7, self.rect.centery)
             b.image = b.image = pygame.image.load('sprites/laser.png').convert_alpha()
             b.image = pygame.transform.flip(b.image, False, True)
             self.eb.add(b)
+
+
+class Boss(pygame.sprite.Sprite):
+    def __init__(self, x, y, boss, eb, tent, at):
+        super().__init__(boss)
+        self.image = pygame.image.load('sprites/Boss.png').convert_alpha()
+        self.image = pygame.transform.scale(self.image,
+                                            (self.image.get_width() * 30, self.image.get_height() * 15))
+        self.rect = self.image.get_rect()
+        self.mask = pygame.mask.from_surface(self.image)
+        self.eb = eb
+        self.at = at
+        self.tent = tent
+        self.rect.centerx = x
+        self.rect.centery = y
+        self.hp = 1000
+        self.speedx = 0
+        self.speedy = 0
+        self.last_shot = 0
+        self.shoot_delay = 1400
+        self.last_tent = 0
+        self.tent_delay = 4000
+        self.clock = pygame.time.Clock()
+        self.delta_time = self.clock.tick(60)
+        t = Tentacle(20, 480)
+        self.tent.add(t)
+
+    def update(self):
+        now = pygame.time.get_ticks()
+        if now - self.last_tent > self.tent_delay:
+            i = random.randint(0,2)
+            if  i == 0:
+                a = Atention(80, 500)
+                self.at.add(a)
+                if now - self.last_tent > self.tent_delay + 1000:
+                    self.last_tent = now
+                    t = Tentacle(20, 500)
+                    t.destroy_point = 400
+                    self.tent.add(t)
+            elif i == 1:
+                a = Atention(500, 500)
+                self.at.add(a)
+                if now - self.last_tent > self.tent_delay + 1000:
+                    self.last_tent = now
+                    t = Tentacle(580, 500)
+                    t.image = pygame.transform.flip(t.image, True, False)
+                    t.speed = -10
+                    t.destroy_point = 200
+                    self.tent.add(t)
+
+
+class Tentacle(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        super().__init__()
+        self.image = pygame.image.load('sprites/tentacle.png').convert_alpha()
+        self.image = pygame.transform.scale(self.image,
+                                            (self.image.get_width() * 1, self.image.get_height() * 3))
+        self.rect = self.image.get_rect()
+        self.mask = pygame.mask.from_surface(self.image)
+        self.rect.centerx = x
+        self.speed = 10
+        self.destroy_point = 800
+        self.rect.centery = y
+
+    def update(self):
+        self.rect.x += self.speed
+        if self.speed > 0:
+            if self.rect.right > self.destroy_point:
+                self.kill()
+        if self.speed < 0:
+            if self.rect.left <= self.destroy_point:
+                self.kill()
+
+
+class Atention(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        super().__init__()
+        self.image = pygame.image.load('sprites/atent.png').convert_alpha()
+        self.image = pygame.transform.scale(self.image,
+                                            (self.image.get_width() * 1, self.image.get_height() * 1))
+        self.rect = self.image.get_rect()
+        self.mask = pygame.mask.from_surface(self.image)
+        self.rect.centerx = x
+        self.rect.centery = y
+        self.life_time = pygame.time.get_ticks()
+
+    def update(self):
+        if self.life_time == 2000:
+            self.kill()

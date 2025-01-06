@@ -21,16 +21,22 @@ if __name__ == "__main__":
     portals = pygame.sprite.Group()
     ls = pygame.sprite.Group()
 
+    boss = pygame.sprite.Group()
+    bossBullet = pygame.sprite.Group()
+    tentacle = pygame.sprite.Group()
+    at = pygame.sprite.Group()
+    c.Boss(screen_width // 2, 50, boss, bossBullet, tentacle, at)
+
     player = c.Player(screen_width, screen_height, bullets, barriers)
     player_v = 5
 
     last_line = c.LastLine()
     ls.add(last_line)
-    [c.Enemy(i, 90, enemies, ebullets) for i in range(100, 500, 90)]
+    # [c.Enemy(i, 90, enemies, ebullets) for i in range(100, 500, 90)]
     [c.Base(i, 510, bases) for i in range(40, 550, 110)]
-    c.Enemy2(250, 60, enemies, ebullets)
-    c.Enemy2(350, 60, enemies, ebullets)
-    c.Enemy3(screen_width // 2, 0, enemies, elasers)
+    # c.Enemy2(250, 60, enemies, ebullets)
+    # c.Enemy2(350, 60, enemies, ebullets)
+    # c.Enemy3(screen_width // 2, 0, enemies, elasers)
 
     score = 0
 
@@ -59,7 +65,13 @@ if __name__ == "__main__":
         draw_text(screen, f"Ваш результат: {score}", 32, screen_width / 2, screen_height / 1.8)
         pygame.display.flip()
         pygame.time.delay(3000)
-        pygame.quit()
+
+    def lose():
+        screen.fill((0, 0, 0))
+        draw_text(screen, "Ты проиграл!", 64, screen_width / 2, screen_height / 2.5)
+        draw_text(screen, f"Лох", 32, screen_width / 2, screen_height / 1.8)
+        pygame.display.flip()
+        pygame.time.delay(3000)
 
     delta_time = 0
     running = True
@@ -101,6 +113,13 @@ if __name__ == "__main__":
 
         enemies.update()
         enemies.draw(screen)
+
+        boss.update()
+        boss.draw(screen)
+        tentacle.update()
+        tentacle.draw(screen)
+        at.update()
+        at.draw(screen)
 
         bases.update()
         bases.draw(screen)
@@ -162,18 +181,22 @@ if __name__ == "__main__":
         col5 = pygame.sprite.groupcollide(ls, elasers, False, True)
         for hit in col5:
             player.hp -= 15
+        col6 = pygame.sprite.groupcollide(bases, tentacle, False, False)
+        for hit in col6:
+            hit.rect.centerx += 20
+        col7 = pygame.sprite.groupcollide(at, tentacle, True, False)
 
         pygame.sprite.groupcollide(ebullets, barriers, True, True)
         draw_text(screen, str(score), 18, 20, 10)
         draw_text(screen, str(pygame.time.get_ticks()), 18, 20, 30)
+        #
+        # if not enemies:
+        #     win()
+        #     running = False
 
-        if not enemies:
-            win()
-            running = False
-
-        draw_shield_bar(screen, screen_width // 2 - 100, 5, player.hp)
+        # draw_shield_bar(screen, screen_width // 2 - 100, 5, player.hp)
         if player.hp <= 0:
-            player.kill()
+            lose()
             running = False
         clock.tick(30)
         pygame.display.update()
