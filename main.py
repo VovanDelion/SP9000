@@ -25,18 +25,18 @@ if __name__ == "__main__":
     bossBullet = pygame.sprite.Group()
     tentacle = pygame.sprite.Group()
     at = pygame.sprite.Group()
-    # bosss = c.Boss(screen_width // 2, 50, boss, bossBullet, tentacle, at)
+    bosss = c.Boss(screen_width // 2, 50, boss, bossBullet, tentacle, at)
 
     player = c.Player(screen_width, screen_height, bullets, barriers)
     player_v = 5
 
     last_line = c.LastLine()
     ls.add(last_line)
-    [c.Enemy(i, 90, enemies, ebullets) for i in range(100, 500, 90)]
+    # [c.Enemy(i, 90, enemies, ebullets) for i in range(100, 500, 90)]
     [c.Base(i, 510, bases) for i in range(40, 550, 110)]
-    c.Enemy2(250, 60, enemies, ebullets)
-    c.Enemy2(350, 60, enemies, ebullets)
-    c.Enemy3(screen_width // 2, 0, enemies, elasers)
+    # c.Enemy2(250, 60, enemies, ebullets)
+    # c.Enemy2(350, 60, enemies, ebullets)
+    # c.Enemy3(screen_width // 2, 0, enemies, elasers)
 
     score = 0
 
@@ -216,12 +216,12 @@ if __name__ == "__main__":
         draw_text(screen, str(score), 18, 20, 10)
         draw_text(screen, str(pygame.time.get_ticks()), 18, 20, 30)
 
-        if not enemies:
-            win()
-            running = False
+        # if not enemies:
+        #     win()
+        #     running = False
 
         draw_hp_bar(screen, screen_width // 4 - 140, 5, player.hp, 'green', 500)
-        # draw_hp_bar(screen, 390, 5, bosss.hp, 'red', 1000)
+        draw_hp_bar(screen, 390, 5, bosss.hp, 'red', 1000)
         if player.hp <= 0:
             lose()
             running = False

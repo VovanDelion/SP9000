@@ -391,7 +391,7 @@ class Boss(pygame.sprite.Sprite):
                 self.eb.add(EBullet(self.rect.centerx, self.rect.centery + 30))
                 self.eb.add(EBullet(self.rect.left + 70, self.rect.centery + 30))
                 self.eb.add(EBullet(self.rect.right - 70, self.rect.centery + 30))
-            if now2 - self.last_shot > self.shoot_delay and (250 > self.hp <= 500):
+            if now2 - self.last_shot > self.shoot_delay and (250 < self.hp <= 500):
                 self.last_shot = now2
                 self.eb.add(EBullet(self.rect.centerx, self.rect.centery + 30))
                 self.eb.add(EBullet(self.rect.right - 70, self.rect.centery + 30))
