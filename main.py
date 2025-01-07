@@ -21,14 +21,15 @@ if __name__ == "__main__":
     portals = pygame.sprite.Group()
     ls = pygame.sprite.Group()
 
+    player = c.Player(screen_width, screen_height, bullets, barriers)
+    player_v = 5
+
     boss = pygame.sprite.Group()
     bossBullet = pygame.sprite.Group()
     tentacle = pygame.sprite.Group()
+    peaks = pygame.sprite.Group()
     at = pygame.sprite.Group()
-    bosss = c.Boss(screen_width // 2, 50, boss, bossBullet, tentacle, at)
-
-    player = c.Player(screen_width, screen_height, bullets, barriers)
-    player_v = 5
+    bosss = c.Boss(screen_width // 2, 50, boss, bossBullet, tentacle, at, peaks, player)
 
     last_line = c.LastLine()
     ls.add(last_line)
@@ -37,7 +38,6 @@ if __name__ == "__main__":
     # c.Enemy2(250, 60, enemies, ebullets)
     # c.Enemy2(350, 60, enemies, ebullets)
     # c.Enemy3(screen_width // 2, 0, enemies, elasers)
-
     score = 0
 
     font_name = pygame.font.match_font('arial')
@@ -96,6 +96,8 @@ if __name__ == "__main__":
             if player.power == 4:
                 player.shoot()
 
+        pygame.mouse.set_visible(False)
+
         screen.fill((0, 0, 0))
         screen.blit(player.image, player.rect)
         player.update()
@@ -120,6 +122,8 @@ if __name__ == "__main__":
         bossBullet.draw(screen)
         tentacle.update()
         tentacle.draw(screen)
+        peaks.update()
+        peaks.draw(screen)
         at.update()
         at.draw(screen)
 
@@ -170,8 +174,11 @@ if __name__ == "__main__":
             if hit.type == "bLaser":
                 player.hp -= 25
             else:
-                player.hp -= 10
                 hit.kill()
+        hits5 = pygame.sprite.spritecollide(player, peaks, True)
+        for hit in hits5:
+            player.hp -= 50
+
 
         col = pygame.sprite.groupcollide(enemies, bullets, True, True)
         for hit in col:
@@ -202,7 +209,7 @@ if __name__ == "__main__":
             hit.rect.centerx += 20
         col8 = pygame.sprite.groupcollide(boss, bullets, False, True)
         for hit in col8:
-            hit.hp -= 5
+            hit.hp -= 10
         col9 = pygame.sprite.groupcollide(bossBullet, barriers, False, True)
         for hit in col9:
             if hit.type == "BLaser":
@@ -216,9 +223,9 @@ if __name__ == "__main__":
         draw_text(screen, str(score), 18, 20, 10)
         draw_text(screen, str(pygame.time.get_ticks()), 18, 20, 30)
 
-        # if not enemies:
-        #     win()
-        #     running = False
+        if not (enemies or boss):
+            win()
+            running = False
 
         draw_hp_bar(screen, screen_width // 4 - 140, 5, player.hp, 'green', 500)
         draw_hp_bar(screen, 390, 5, bosss.hp, 'red', 1000)

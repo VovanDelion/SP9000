@@ -1,5 +1,14 @@
 import random
 import pygame
+import math
+
+
+def calculate_angle(player_pos, target_pos):
+    dx = target_pos[0] - player_pos[0]
+    dy = target_pos[1] - player_pos[1]
+    angle = math.atan2(dy, dx)
+    angle_degrees = math.degrees(angle)
+    return angle_degrees
 
 
 p_images = dict()
@@ -11,6 +20,7 @@ p_images['dbull'] = 'sprites/dbull_pow.png'
 
 POWERUP_TIME = 5000
 PORTAL_TIME = 10000
+
 
 class Player(pygame.sprite.Sprite):
     """Класс управляемого персонажа"""
@@ -223,10 +233,11 @@ class Barrier(pygame.sprite.Sprite):
     def __init__(self, x, y):
         super().__init__()
         self.image = pygame.image.load('sprites/barr.png').convert_alpha()
+        self.image = pygame.transform.scale(self.image,
+                                            (self.image.get_width() * 2, self.image.get_height() * 1))
         self.rect = self.image.get_rect()
         self.mask = pygame.mask.from_surface(self.image)
-        self.rect.x, self.rect.y =  x, y
-        self.rect.x -= 5
+        self.rect.centerx, self.rect.y =  x + 1, y
         self.speed = 10
 
     def update(self):
@@ -317,11 +328,6 @@ class Enemy(pygame.sprite.Sprite):
             elif self.lv == 2:
                 self.eb.add(EBullet(self.rect.centerx, self.rect.centery))
                 self.eb.add(EBullet(self.rect.centerx, self.rect.centery + 10))
-            elif self.lv == 3:
-                b = EBullet(self.rect.centerx + 3, self.rect.centery)
-                b.image = b.image = pygame.image.load('sprites/laser.png').convert_alpha()
-                b.image = pygame.transform.flip(b.image, False, True)
-                self.elasers.add(b)
 
 
 class Enemy2(Enemy):
@@ -355,7 +361,7 @@ class Enemy3(Enemy):
 
 
 class Boss(pygame.sprite.Sprite):
-    def __init__(self, x, y, boss, eb, tent, at):
+    def __init__(self, x, y, boss, eb, tent, at, peaks, player):
         super().__init__(boss)
         self.image = pygame.image.load('sprites/Boss.png').convert_alpha()
         self.image = pygame.transform.scale(self.image,
@@ -365,15 +371,19 @@ class Boss(pygame.sprite.Sprite):
         self.eb = eb
         self.at = at
         self.tent = tent
+        self.peaks = peaks
+        self.player = player
         self.rect.centerx = x
         self.rect.centery = y
         self.hp = 1000
         self.speedx = 0
         self.speedy = 0
-        self.last_shot = 0
+        self.last_shot = 2600
         self.shoot_delay = 1400
         self.last_tent = 0
         self.tent_delay = 4000
+        self.last_peaks = 0
+        self.peaks_delay = 6000
         self.laser_charge = 0
         self.clock = pygame.time.Clock()
         self.delta_time = self.clock.tick(60)
@@ -418,6 +428,10 @@ class Boss(pygame.sprite.Sprite):
                             t.destroy_point = 200
                             self.tent.add(t)
                             self.laser_charge += 1
+                if now - self.last_peaks > self.peaks_delay:
+                    self.last_peaks = now
+                    self.peaks.add(Peak(150, 150, self.player))
+                    self.peaks.add(Peak(450, 150, self.player))
 
             if self.hp <= 750:
                 self.image = pygame.image.load('sprites/Boss_laser.png').convert_alpha()
@@ -458,6 +472,43 @@ class Tentacle(pygame.sprite.Sprite):
         if self.speed < 0:
             if self.rect.left <= self.destroy_point:
                 self.kill()
+
+
+class Peak(pygame.sprite.Sprite):
+    def __init__(self, x, y, player):
+        super().__init__()
+        self.image = pygame.image.load('sprites/peak.png').convert_alpha()
+        self.image = pygame.transform.scale(self.image,
+                                            (self.image.get_width() * 3, self.image.get_height() * 3))
+        self.rect = self.image.get_rect()
+        self.mask = pygame.mask.from_surface(self.image)
+        self.rect.centerx = x
+        self.rect.centery = y
+        self.speed = 0
+        self.last_shot = pygame.time.get_ticks()
+        self.shoot_delay = 2000
+        self.player = player
+        player_x, player_y = self.player.rect.center
+        self.angle = math.atan2(player_y - self.rect.centery, player_x - self.rect.centerx)
+
+    def update(self):
+        now = pygame.time.get_ticks()
+        self.move_toward_player()
+        if now - self.last_shot > self.shoot_delay:
+            self.speed = 40
+        else:
+            self.rotate_toward_player()
+            player_x, player_y = self.player.rect.center
+            self.angle = math.atan2(player_y - self.rect.centery, player_x - self.rect.centerx)
+
+    def rotate_toward_player(self):
+        self.image = pygame.transform.rotate(pygame.image.load('sprites/peak.png').convert_alpha(),
+                                             -math.degrees(self.angle) + 90)
+        self.rect = self.image.get_rect(center=self.rect.center)
+
+    def move_toward_player(self):
+        self.rect.x += self.speed * math.cos(self.angle)
+        self.rect.y += self.speed * math.sin(self.angle)
 
 
 class Atention(pygame.sprite.Sprite):
