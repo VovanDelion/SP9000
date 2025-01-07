@@ -25,18 +25,18 @@ if __name__ == "__main__":
     bossBullet = pygame.sprite.Group()
     tentacle = pygame.sprite.Group()
     at = pygame.sprite.Group()
-    c.Boss(screen_width // 2, 50, boss, bossBullet, tentacle, at)
+    # bosss = c.Boss(screen_width // 2, 50, boss, bossBullet, tentacle, at)
 
     player = c.Player(screen_width, screen_height, bullets, barriers)
     player_v = 5
 
     last_line = c.LastLine()
     ls.add(last_line)
-    # [c.Enemy(i, 90, enemies, ebullets) for i in range(100, 500, 90)]
+    [c.Enemy(i, 90, enemies, ebullets) for i in range(100, 500, 90)]
     [c.Base(i, 510, bases) for i in range(40, 550, 110)]
-    # c.Enemy2(250, 60, enemies, ebullets)
-    # c.Enemy2(350, 60, enemies, ebullets)
-    # c.Enemy3(screen_width // 2, 0, enemies, elasers)
+    c.Enemy2(250, 60, enemies, ebullets)
+    c.Enemy2(350, 60, enemies, ebullets)
+    c.Enemy3(screen_width // 2, 0, enemies, elasers)
 
     score = 0
 
@@ -48,15 +48,15 @@ if __name__ == "__main__":
         text_rect.midtop = (x, y)
         surf.blit(text_surface, text_rect)
 
-    def draw_shield_bar(surf, x, y, pct):
+    def draw_hp_bar(surf, x, y, pct, color, piecies):
         if pct < 0:
             pct = 0
         BAR_LENGTH = 200
         BAR_HEIGHT = 20
-        fill = (pct / 500) * BAR_LENGTH
+        fill = (pct / piecies) * BAR_LENGTH
         outline_rect = pygame.Rect(x, y, BAR_LENGTH, BAR_HEIGHT)
         fill_rect = pygame.Rect(x, y, fill, BAR_HEIGHT)
-        pygame.draw.rect(surf, (0, 255, 0), fill_rect)
+        pygame.draw.rect(surf, color, fill_rect)
         pygame.draw.rect(surf, (255, 255, 255), outline_rect, 2)
 
     def win():
@@ -93,7 +93,7 @@ if __name__ == "__main__":
         elif keys[pygame.K_d]:
             player.move(player_v)
         if buttons[0]:
-            if player.power == 3:
+            if player.power == 4:
                 player.shoot()
 
         screen.fill((0, 0, 0))
@@ -116,6 +116,8 @@ if __name__ == "__main__":
 
         boss.update()
         boss.draw(screen)
+        bossBullet.update()
+        bossBullet.draw(screen)
         tentacle.update()
         tentacle.draw(screen)
         at.update()
@@ -129,15 +131,6 @@ if __name__ == "__main__":
 
         portals.update()
         portals.draw(screen)
-
-        col = pygame.sprite.groupcollide(enemies, bullets, True, True)
-        for hit in col:
-            if hit.lv == 1 or hit.lv == 2:
-                score += 50
-            elif hit.lv == 3:
-                score += 100
-            if random.random() > 0.1:
-                power.add(c.Pow(hit.rect.center))
 
         hits = pygame.sprite.spritecollide(player, power, True)
         for hit in hits:
@@ -165,6 +158,29 @@ if __name__ == "__main__":
                 player.rect.x = p2.rect.x - 15
             if hit == p2:
                 player.rect.x = p1.rect.x + 15
+        hits3 = pygame.sprite.spritecollide(player, tentacle, False)
+        for hit in hits3:
+            player.hp -= 5
+            if hit.type == "right":
+                player.rect.centerx += 20
+            else:
+                player.rect.centerx -= 20
+        hits4 = pygame.sprite.spritecollide(player, bossBullet, False)
+        for hit in hits4:
+            if hit.type == "bLaser":
+                player.hp -= 25
+            else:
+                player.hp -= 10
+                hit.kill()
+
+        col = pygame.sprite.groupcollide(enemies, bullets, True, True)
+        for hit in col:
+            if hit.lv == 1 or hit.lv == 2:
+                score += 50
+            elif hit.lv == 3:
+                score += 100
+            if random.random() > 0.8:
+                power.add(c.Pow(hit.rect.center))
 
         col1 = pygame.sprite.groupcollide(bases, enemies, False, True)
         for hit in col1:
@@ -184,17 +200,28 @@ if __name__ == "__main__":
         col6 = pygame.sprite.groupcollide(bases, tentacle, False, False)
         for hit in col6:
             hit.rect.centerx += 20
-        col7 = pygame.sprite.groupcollide(at, tentacle, True, False)
+        col8 = pygame.sprite.groupcollide(boss, bullets, False, True)
+        for hit in col8:
+            hit.hp -= 5
+        col9 = pygame.sprite.groupcollide(bossBullet, barriers, False, True)
+        for hit in col9:
+            if hit.type == "BLaser":
+                pass
+            else:
+                hit.kill()
 
         pygame.sprite.groupcollide(ebullets, barriers, True, True)
+        pygame.sprite.groupcollide(at, tentacle, True, False)
+
         draw_text(screen, str(score), 18, 20, 10)
         draw_text(screen, str(pygame.time.get_ticks()), 18, 20, 30)
-        #
-        # if not enemies:
-        #     win()
-        #     running = False
 
-        # draw_shield_bar(screen, screen_width // 2 - 100, 5, player.hp)
+        if not enemies:
+            win()
+            running = False
+
+        draw_hp_bar(screen, screen_width // 4 - 140, 5, player.hp, 'green', 500)
+        # draw_hp_bar(screen, 390, 5, bosss.hp, 'red', 1000)
         if player.hp <= 0:
             lose()
             running = False

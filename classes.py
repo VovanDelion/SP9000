@@ -41,7 +41,14 @@ class Player(pygame.sprite.Sprite):
         elif self.power == 2 and pygame.time.get_ticks() - self.power_time > POWERUP_TIME:
             self.power = 1
             self.power_time = pygame.time.get_ticks()
-
+        if self.power == 4:
+            self.image = pygame.image.load('sprites/laser_player.png').convert_alpha()
+        elif self.power == 3:
+            self.image = pygame.image.load('sprites/db_player.png').convert_alpha()
+        elif self.power == 2:
+            self.image = pygame.image.load('sprites/electro_player.png').convert_alpha()
+        elif self.power == 1:
+            self.image = pygame.image.load('sprites/player.png').convert_alpha()
     def move(self, v):
         """Перемещение персонажа по указанной скорости"""
         self.rect.x += v
@@ -55,15 +62,15 @@ class Player(pygame.sprite.Sprite):
         self.power_time = pygame.time.get_ticks()
 
     def laserup(self):
-        self.power = 3
-        self.power_time = pygame.time.get_ticks()
-
-    def dbullup(self):
         self.power = 4
         self.power_time = pygame.time.get_ticks()
 
+    def dbullup(self):
+        self.power = 3
+        self.power_time = pygame.time.get_ticks()
+
     def shoot(self):
-        if self.power == 3:
+        if self.power == 4:
             b = Bullet(self.rect.centerx - 1, self.rect.centery)
             b.image = pygame.image.load('sprites/laser.png').convert_alpha()
             b.rect.y -= 6
@@ -88,7 +95,7 @@ class Player(pygame.sprite.Sprite):
                 self.bullets.add(b1)
                 self.bullets.add(b2)
                 self.bullets.add(b3)
-            elif self.power == 4:
+            elif self.power == 3:
                 b1 = DoubleB(self.rect.centerx - 1, self.rect.centery, -1)
                 b1.rect.y -= 7
                 b2 = DoubleB(self.rect.centerx - 1, self.rect.centery, 1)
@@ -196,6 +203,21 @@ class EBullet(pygame.sprite.Sprite):
         """Перемещение пули"""
         self.rect.y += self.speed
 
+
+class BossLaser(EBullet):
+    def __init__(self, x, y):
+        super().__init__(x, y)
+        self.image = pygame.image.load('sprites/laser.png').convert_alpha()
+        self.image = pygame.transform.scale(self.image,
+                                            (self.image.get_width() * 10, self.image.get_height() * 20))
+        self.image = pygame.transform.flip(self.image, False, True)
+        self.rect = self.image.get_rect()
+        self.mask = pygame.mask.from_surface(self.image)
+        self.rect.centerx, self.rect.y = x, y
+        self.speed = 25
+        self.type = "bLaser"
+
+
 class Barrier(pygame.sprite.Sprite):
     """Класс барьера"""
     def __init__(self, x, y):
@@ -254,8 +276,6 @@ class Base(pygame.sprite.Sprite):
             self.kill()
 
 
-
-
 class Enemy(pygame.sprite.Sprite):
     """Класс врага"""
     def __init__(self, x, y, enemies, eb):
@@ -286,7 +306,6 @@ class Enemy(pygame.sprite.Sprite):
         self.rect.x += self.speedx * self.delta_time
         if self.rect.right >= 500 or self.rect.left <= 100:
             self.speedx = -self.speedx
-
 
     def shoot(self):
         """Стрельба врага"""
@@ -355,33 +374,65 @@ class Boss(pygame.sprite.Sprite):
         self.shoot_delay = 1400
         self.last_tent = 0
         self.tent_delay = 4000
+        self.laser_charge = 0
         self.clock = pygame.time.Clock()
         self.delta_time = self.clock.tick(60)
         t = Tentacle(20, 480)
         self.tent.add(t)
 
     def update(self):
-        now = pygame.time.get_ticks()
-        if now - self.last_tent > self.tent_delay:
-            i = random.randint(0,2)
-            if  i == 0:
-                a = Atention(80, 500)
-                self.at.add(a)
-                if now - self.last_tent > self.tent_delay + 1000:
-                    self.last_tent = now
-                    t = Tentacle(20, 500)
-                    t.destroy_point = 400
-                    self.tent.add(t)
-            elif i == 1:
-                a = Atention(500, 500)
-                self.at.add(a)
-                if now - self.last_tent > self.tent_delay + 1000:
-                    self.last_tent = now
-                    t = Tentacle(580, 500)
-                    t.image = pygame.transform.flip(t.image, True, False)
-                    t.speed = -10
-                    t.destroy_point = 200
-                    self.tent.add(t)
+        if self.laser_charge >= 6 and self.hp <= 750:
+            self.laser_charge = 0
+            self.eb.add(BossLaser(self.rect.centerx, self.rect.centery))
+        else:
+            now = now2 = pygame.time.get_ticks()
+            if now2 - self.last_shot > self.shoot_delay and self.hp > 500:
+                self.last_shot = now2
+                self.eb.add(EBullet(self.rect.centerx, self.rect.centery + 30))
+                self.eb.add(EBullet(self.rect.left + 70, self.rect.centery + 30))
+                self.eb.add(EBullet(self.rect.right - 70, self.rect.centery + 30))
+            if now2 - self.last_shot > self.shoot_delay and (250 > self.hp <= 500):
+                self.last_shot = now2
+                self.eb.add(EBullet(self.rect.centerx, self.rect.centery + 30))
+                self.eb.add(EBullet(self.rect.right - 70, self.rect.centery + 30))
+            if now2 - self.last_shot > self.shoot_delay and self.hp <= 250:
+                self.last_shot = now2
+                self.eb.add(EBullet(self.rect.centerx, self.rect.centery + 30))
+            if now - self.last_tent > self.tent_delay:
+                i = random.randint(0,2)
+                if now - self.last_tent > self.tent_delay:
+                    if  i == 0:
+                        if now - self.last_tent > self.tent_delay:
+                            self.last_tent = now
+                            t = Tentacle(20, 500)
+                            t.destroy_point = 400
+                            self.tent.add(t)
+                            self.laser_charge += 1
+                    elif i == 1:
+                        if now - self.last_tent > self.tent_delay:
+                            self.last_tent = now
+                            t = Tentacle(580, 500)
+                            t.image = pygame.transform.flip(t.image, True, False)
+                            t.type = "left"
+                            t.speed = -10
+                            t.destroy_point = 200
+                            self.tent.add(t)
+                            self.laser_charge += 1
+
+            if self.hp <= 750:
+                self.image = pygame.image.load('sprites/Boss_laser.png').convert_alpha()
+                self.image = pygame.transform.scale(self.image,
+                                                    (self.image.get_width() * 30, self.image.get_height() * 15))
+            if self.hp <= 500:
+                self.image = pygame.image.load('sprites/hl_boss.png').convert_alpha()
+                self.image = pygame.transform.scale(self.image,
+                                                    (self.image.get_width() * 30, self.image.get_height() * 15))
+            if self.hp <= 250:
+                self.image = pygame.image.load('sprites/ql_boss.png').convert_alpha()
+                self.image = pygame.transform.scale(self.image,
+                                                    (self.image.get_width() * 30, self.image.get_height() * 15))
+            if self.hp <= 0:
+                self.kill()
 
 
 class Tentacle(pygame.sprite.Sprite):
@@ -393,9 +444,11 @@ class Tentacle(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.mask = pygame.mask.from_surface(self.image)
         self.rect.centerx = x
+        self.rect.centery = y
+        self.type = "right"
         self.speed = 10
         self.destroy_point = 800
-        self.rect.centery = y
+
 
     def update(self):
         self.rect.x += self.speed
