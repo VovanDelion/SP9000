@@ -31,6 +31,9 @@ class Player(pygame.sprite.Sprite):
         self.screen_width = screen_width
         self.rect.x = screen_width / 2
         self.rect.y = screen_height - 30
+        self.shoot_sound = pygame.mixer.Sound('saunds/player_shoot.mp3')
+        self.damage_sound = pygame.mixer.Sound('saunds/player_damage.mp3')
+        self.power_sound = pygame.mixer.Sound('saunds/power_up.mp3')
         self.hp = 500
         self.bullets = bullets
         self.barr = barr
@@ -91,6 +94,7 @@ class Player(pygame.sprite.Sprite):
             if self.power == 1:
                 bullet = Bullet(self.rect.centerx, self.rect.top)
                 self.bullets.add(bullet)
+                self.shoot_sound.play()
             elif self.power == 2:
                 b1 = Bullet(self.rect.centerx - 7, self.rect.centery)
                 b1.image = pygame.image.load('sprites/electro_bull.png').convert_alpha()
@@ -296,6 +300,7 @@ class Enemy(pygame.sprite.Sprite):
                                             (self.image.get_width() * 2, self.image.get_height() * 2))
         self.rect = self.image.get_rect()
         self.mask = pygame.mask.from_surface(self.image)
+        self.shoot_sound = pygame.mixer.Sound('saunds/enemy_shoot.mp3')
         self.lv = 1
         self.eb = eb
         self.rect.x = x
@@ -325,9 +330,11 @@ class Enemy(pygame.sprite.Sprite):
             self.last_shot = now
             if self.lv == 1:
                 self.eb.add(EBullet(self.rect.centerx, self.rect.centery))
+                self.shoot_sound.play()
             elif self.lv == 2:
                 self.eb.add(EBullet(self.rect.centerx, self.rect.centery))
                 self.eb.add(EBullet(self.rect.centerx, self.rect.centery + 10))
+                self.shoot_sound.play()
 
 
 class Enemy2(Enemy):
@@ -346,6 +353,7 @@ class Enemy3(Enemy):
         self.image = pygame.image.load('sprites/enemy3.png').convert_alpha()
         self.image = pygame.transform.scale(self.image,
                                             (self.image.get_width() * 2, self.image.get_height() * 2))
+        self.laser_shoot_sound = pygame.mixer.Sound('saunds/enemy_laser_shoot.mp3')
         self.lv = 3
         self.shoot_delay = 1800
 
@@ -354,6 +362,7 @@ class Enemy3(Enemy):
         now = pygame.time.get_ticks()
         if now - self.last_shot > self.shoot_delay:
             self.last_shot = now
+            self.laser_shoot_sound.play()
             b = EBullet(self.rect.centerx + 7, self.rect.centery)
             b.image = b.image = pygame.image.load('sprites/laser.png').convert_alpha()
             b.image = pygame.transform.flip(b.image, False, True)
@@ -368,6 +377,9 @@ class Boss(pygame.sprite.Sprite):
                                             (self.image.get_width() * 30, self.image.get_height() * 15))
         self.rect = self.image.get_rect()
         self.mask = pygame.mask.from_surface(self.image)
+        self.spawn_sound = pygame.mixer.Sound('saunds/boss_spawn.mp3')
+        self.shoot_sound = pygame.mixer.Sound('saunds/enemy_shoot.mp3')
+        self.laser_shoot_sound = pygame.mixer.Sound('saunds/enemy_laser_shoot.mp3')
         self.eb = eb
         self.at = at
         self.tent = tent
@@ -389,11 +401,13 @@ class Boss(pygame.sprite.Sprite):
         self.delta_time = self.clock.tick(60)
         t = Tentacle(20, 480)
         self.tent.add(t)
+        self.spawn_sound.play()
 
     def update(self):
         if self.laser_charge >= 6 and self.hp <= 750:
             self.laser_charge = 0
             self.eb.add(BossLaser(self.rect.centerx, self.rect.centery))
+            self.laser_shoot_sound.play()
         else:
             now = now2 = pygame.time.get_ticks()
             if now2 - self.last_shot > self.shoot_delay and self.hp > 500:
@@ -401,13 +415,16 @@ class Boss(pygame.sprite.Sprite):
                 self.eb.add(EBullet(self.rect.centerx, self.rect.centery + 30))
                 self.eb.add(EBullet(self.rect.left + 70, self.rect.centery + 30))
                 self.eb.add(EBullet(self.rect.right - 70, self.rect.centery + 30))
+                self.shoot_sound.play()
             if now2 - self.last_shot > self.shoot_delay and (250 < self.hp <= 500):
                 self.last_shot = now2
                 self.eb.add(EBullet(self.rect.centerx, self.rect.centery + 30))
                 self.eb.add(EBullet(self.rect.right - 70, self.rect.centery + 30))
+                self.shoot_sound.play()
             if now2 - self.last_shot > self.shoot_delay and self.hp <= 250:
                 self.last_shot = now2
                 self.eb.add(EBullet(self.rect.centerx, self.rect.centery + 30))
+                self.shoot_sound.play()
             if now - self.last_tent > self.tent_delay:
                 i = random.randint(0,2)
                 if now - self.last_tent > self.tent_delay:
@@ -459,9 +476,11 @@ class Tentacle(pygame.sprite.Sprite):
         self.mask = pygame.mask.from_surface(self.image)
         self.rect.centerx = x
         self.rect.centery = y
+        self.sound = pygame.mixer.Sound("saunds/tent_sound.mp3")
         self.type = "right"
         self.speed = 10
         self.destroy_point = 800
+        self.sound.play()
 
 
     def update(self):
@@ -482,6 +501,8 @@ class Peak(pygame.sprite.Sprite):
                                             (self.image.get_width() * 3, self.image.get_height() * 3))
         self.rect = self.image.get_rect()
         self.mask = pygame.mask.from_surface(self.image)
+        self.sound = pygame.mixer.Sound("saunds/peak_spawn.mp3")
+        self.shoot_sound = pygame.mixer.Sound("saunds/peak_shoot.mp3")
         self.rect.centerx = x
         self.rect.centery = y
         self.speed = 0
@@ -490,16 +511,20 @@ class Peak(pygame.sprite.Sprite):
         self.player = player
         player_x, player_y = self.player.rect.center
         self.angle = math.atan2(player_y - self.rect.centery, player_x - self.rect.centerx)
+        self.sound.play()
 
     def update(self):
         now = pygame.time.get_ticks()
         self.move_toward_player()
         if now - self.last_shot > self.shoot_delay:
+            self.shoot_sound.play()
             self.speed = 40
         else:
             self.rotate_toward_player()
             player_x, player_y = self.player.rect.center
             self.angle = math.atan2(player_y - self.rect.centery, player_x - self.rect.centerx)
+        if self.rect.top >= 600:
+            self.kill()
 
     def rotate_toward_player(self):
         self.image = pygame.transform.rotate(pygame.image.load('sprites/peak.png').convert_alpha(),
