@@ -1,7 +1,10 @@
 import random
 import pygame
 import classes as c
+import sqlite3
 
+conn = sqlite3.connect('db/score.sqlite')
+cursor = conn.cursor()
 
 if __name__ == "__main__":
     pygame.init()
@@ -10,6 +13,7 @@ if __name__ == "__main__":
     screen_height = 600
     screen = pygame.display.set_mode((screen_width, screen_height))
     pygame.display.set_caption("SP9000")
+    map_name = "boss"
 
     bullets = pygame.sprite.Group()
     enemies = pygame.sprite.Group()
@@ -92,6 +96,8 @@ if __name__ == "__main__":
             player.move(-player_v)
         elif keys[pygame.K_d]:
             player.move(player_v)
+        if keys[pygame.K_SPACE]:
+            player.perecat()
         if buttons[0]:
             if player.power == 4:
                 player.shoot()
@@ -192,7 +198,7 @@ if __name__ == "__main__":
                 score += 50
             elif hit.lv == 3:
                 score += 100
-            if random.random() > 0.8:
+            if random.random() > 0.1:
                 power.add(c.Pow(hit.rect.center))
 
         col1 = pygame.sprite.groupcollide(bases, enemies, False, True)
@@ -226,8 +232,8 @@ if __name__ == "__main__":
         pygame.sprite.groupcollide(ebullets, barriers, True, True)
         pygame.sprite.groupcollide(at, tentacle, True, False)
 
-        draw_text(screen, str(score), 18, 20, 10)
-        draw_text(screen, str(pygame.time.get_ticks()), 18, 20, 30)
+        draw_text(screen, str(score), 18, 20, 50)
+        draw_text(screen, str(pygame.time.get_ticks()), 18, 20, 70)
 
         if not (enemies or boss):
             win()
@@ -240,3 +246,7 @@ if __name__ == "__main__":
             running = False
         clock.tick(30)
         pygame.display.update()
+
+cursor.execute(f"""insert into score (score, map) values ({score}, '{map_name}')""")
+conn.commit()
+conn.close()

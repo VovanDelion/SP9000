@@ -39,6 +39,8 @@ class Player(pygame.sprite.Sprite):
         self.barr = barr
         self.last_shot = 0
         self.shoot_delay = 300
+        self.last_perecat = 0
+        self.perecat_dalat = 800
         self.power = 1
         self.power_time = pygame.time.get_ticks()
         self.clock = pygame.time.Clock()
@@ -118,6 +120,16 @@ class Player(pygame.sprite.Sprite):
 
     def deffen(self):
         self.barr.add(Barrier(self.rect.centerx - 1, self.rect.y))
+
+    def perecat(self):
+        now = pygame.time.get_ticks()
+        if now - self.last_perecat > self.perecat_dalat:
+            self.last_perecat = now
+            keys = pygame.key.get_pressed()
+            if keys[pygame.K_a]:
+                self.rect.centerx -= 40
+            if keys[pygame.K_d]:
+                self.rect.centerx += 40
 
 
 class LastLine(pygame.sprite.Sprite):
