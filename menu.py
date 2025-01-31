@@ -2,6 +2,7 @@ import sqlite3
 import pygame
 import sys
 import main
+import classes as c
 
 
 pygame.init()
@@ -19,7 +20,7 @@ BUTTON_HOVER_COLOR = (150, 150, 150)
 
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 # menu_background = pygame.image.load("fonmenu_space_invaders.jpg")
-pygame.display.set_caption("Space Invaders Menu")
+pygame.display.set_caption("Space Invaders")
 clock = pygame.time.Clock()
 
 font = pygame.font.Font(pygame.font.match_font('arial'), 30)
@@ -83,12 +84,20 @@ def draw_rating_screen():
     screen.fill(BLACK)
     conn = sqlite3.connect('db/score.sqlite')
     cursor = conn.cursor()
-    last_score = cursor.execute("""select * from score where id = (SELECT max(id) FROM score)""").fetchone()
-    best_score = cursor.execute("""select * from score where score = (SELECT MAX(score) FROM score)""").fetchone()
+    last_scores = cursor.execute("""select map, score from score""").fetchall()
+    best_score = cursor.execute("""select map, score from score where score = (SELECT MAX(score) FROM score)""").fetchone()
     conn.close()
     draw_text(screen, "Рейтинг", 40, WIDTH // 2, 50, WHITE)
-    draw_text(screen, f"Лучший результат: {best_score}", 30, WIDTH // 2, 150, WHITE)
-    draw_text(screen, f"Последняя игра: {last_score}", 30, WIDTH // 2, 200, WHITE)
+    draw_text(screen, f"Лучший результат:", 30, WIDTH // 2, 100, "yellow")
+    draw_text(screen, f"Уровень {best_score[0]}, очков {best_score[1]}", 30, WIDTH // 2, 150, WHITE)
+    draw_text(screen, f"Последнии игры:", 30, WIDTH // 2, 200, WHITE)
+    draw_text(screen, f"Уровень               Очки", 30, WIDTH // 2, 250, WHITE)
+    h = 300
+    for i in last_scores[::-1]:
+        draw_text(screen, '                  '.join(str(x) for x in i), 30, WIDTH // 2, h, WHITE)
+        h += 50
+        if h == 500:
+            break
     back_button.draw(screen)
 
 
@@ -106,10 +115,14 @@ menu_state = "MENU"
 
 running = True
 
+all_sprites = pygame.sprite.Group()
+all_sprites.add(c.anim_guy(500, (WIDTH // 2)))
+
 while running:
     # screen.blit(menu_background, (0, 0))
     clock.tick(FPS)
     pygame.mouse.set_visible(True)
+
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
@@ -123,14 +136,19 @@ while running:
     if menu_state == "MENU":
         # screen.blit(menu_background, (0, 0))
         screen.fill(BLACK)
-        draw_text(screen, "Space Invaders Menu", 60, WIDTH // 2, 50, WHITE)  # Заголовок меню
+        draw_text(screen, "Space Invaders", 60, WIDTH // 2, 50, GREEN)  # Заголовок меню
         play_button.draw(screen)
         settings_button.draw(screen)
         rating_button.draw(screen)
+        all_sprites.update()
+        all_sprites.draw(screen)
+
     elif menu_state == "RATING":  # Если в рейтинге
         draw_rating_screen()
 
     pygame.display.flip()
+    clock.tick(30)
+    pygame.display.update()
 
 pygame.quit()
 sys.exit()

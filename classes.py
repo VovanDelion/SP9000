@@ -563,3 +563,34 @@ class Atention(pygame.sprite.Sprite):
     def update(self):
         if self.life_time == 2000:
             self.kill()
+
+
+class anim_guy(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        super().__init__()
+        self.image = pygame.image.load('sprites/anim_guy.png').convert_alpha()
+        self.image = pygame.transform.scale(self.image,
+                                            (self.image.get_width() * 6, self.image.get_height() * 6))
+        self.rect = self.image.get_rect()
+        self.mask = pygame.mask.from_surface(self.image)
+        self.rect.centerx = x
+        self.rect.centery = y
+        self.dance_time = pygame.time.get_ticks()
+        self.dance = False
+        self.dance_delay = 600
+
+    def update(self):
+        now = pygame.time.get_ticks()
+        if now - self.dance_time > self.dance_delay:
+            self.dance_time = now
+            if not self.dance:
+                self.image = pygame.image.load('sprites/anim_guy2.png').convert_alpha()
+                self.image = pygame.transform.scale(self.image,
+                                                    (self.image.get_width() * 6, self.image.get_height() * 6))
+                self.dance = True
+            else:
+                self.image = pygame.image.load('sprites/anim_guy.png').convert_alpha()
+                self.image = pygame.transform.scale(self.image,
+                                                    (self.image.get_width() * 6, self.image.get_height() * 6))
+                self.dance = False
+

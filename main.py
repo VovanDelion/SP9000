@@ -3,11 +3,12 @@ import pygame
 import classes as c
 import sqlite3
 
-conn = sqlite3.connect('db/score.sqlite')
-cursor = conn.cursor()
 
 def game():
     pygame.init()
+
+    conn = sqlite3.connect('db/score.sqlite')
+    cursor = conn.cursor()
 
     screen_width = 600
     screen_height = 600
@@ -33,21 +34,21 @@ def game():
     tentacle = pygame.sprite.Group()
     peaks = pygame.sprite.Group()
     at = pygame.sprite.Group()
-    # bosss = c.Boss(screen_width // 2, 50, boss, bossBullet, tentacle, at, peaks, player)
+    bosss = c.Boss(screen_width // 2, 50, boss, bossBullet, tentacle, at, peaks, player)
 
     last_line = c.LastLine()
     ls.add(last_line)
-    [c.Enemy(i, 90, enemies, ebullets) for i in range(100, 500, 90)]
+    # [c.Enemy(i, 90, enemies, ebullets) for i in range(100, 500, 90)]
     [c.Base(i, 510, bases) for i in range(40, 550, 110)]
-    c.Enemy2(250, 60, enemies, ebullets)
-    c.Enemy2(350, 60, enemies, ebullets)
-    c.Enemy3(screen_width // 2, 0, enemies, elasers)
+    # c.Enemy2(250, 60, enemies, ebullets)
+    # c.Enemy2(350, 60, enemies, ebullets)
+    # c.Enemy3(screen_width // 2, 0, enemies, elasers)
     score = 0
 
     font_name = pygame.font.match_font('arial')
-    def draw_text(surf, text, size, x, y):
+    def draw_text(surf, text, size, x, y, color=(255, 255, 255)):
         font = pygame.font.Font(font_name, size)
-        text_surface = font.render(text, True, (255, 255, 255))
+        text_surface = font.render(text, True, color)
         text_rect = text_surface.get_rect()
         text_rect.midtop = (x, y)
         surf.blit(text_surface, text_rect)
@@ -72,7 +73,7 @@ def game():
 
     def lose():
         screen.fill((0, 0, 0))
-        draw_text(screen, "Ты проиграл!", 64, screen_width / 2, screen_height / 2.5)
+        draw_text(screen, "Ты проиграл!", 64, screen_width / 2, screen_height / 2.5, "red")
         pygame.display.flip()
         pygame.time.delay(3000)
 
@@ -189,7 +190,6 @@ def game():
             player.hp -= 50
             player.damage_sound.play()
 
-
         col = pygame.sprite.groupcollide(enemies, bullets, True, True)
         for hit in col:
             if hit.lv == 1 or hit.lv == 2:
@@ -226,6 +226,9 @@ def game():
                 pass
             else:
                 hit.kill()
+        col9 = pygame.sprite.groupcollide(ls, enemies, False, True)
+        for hit in col9:
+            player.hp -= 200
 
         pygame.sprite.groupcollide(ebullets, barriers, True, True)
         pygame.sprite.groupcollide(at, tentacle, True, False)
@@ -238,7 +241,7 @@ def game():
             running = False
 
         draw_hp_bar(screen, screen_width // 4 - 140, 5, player.hp, 'green', 500)
-        # draw_hp_bar(screen, 390, 5, bosss.hp, 'red', 1000)
+        draw_hp_bar(screen, 390, 5, bosss.hp, 'red', 1000)
         if player.hp <= 0:
             lose()
             running = False
