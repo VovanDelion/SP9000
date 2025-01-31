@@ -6,14 +6,14 @@ import sqlite3
 conn = sqlite3.connect('db/score.sqlite')
 cursor = conn.cursor()
 
-if __name__ == "__main__":
+def game():
     pygame.init()
 
     screen_width = 600
     screen_height = 600
     screen = pygame.display.set_mode((screen_width, screen_height))
     pygame.display.set_caption("SP9000")
-    map_name = "boss"
+    map_name = "level_1"
 
     bullets = pygame.sprite.Group()
     enemies = pygame.sprite.Group()
@@ -73,11 +73,9 @@ if __name__ == "__main__":
     def lose():
         screen.fill((0, 0, 0))
         draw_text(screen, "Ты проиграл!", 64, screen_width / 2, screen_height / 2.5)
-        draw_text(screen, f"Лох", 32, screen_width / 2, screen_height / 1.8)
         pygame.display.flip()
         pygame.time.delay(3000)
 
-    delta_time = 0
     running = True
     clock = pygame.time.Clock()
     while running:
@@ -247,6 +245,6 @@ if __name__ == "__main__":
         clock.tick(30)
         pygame.display.update()
 
-cursor.execute(f"""insert into score (score, map) values ({score}, '{map_name}')""")
-conn.commit()
-conn.close()
+    cursor.execute(f"""insert into score (score, map) values ({score}, '{map_name}')""")
+    conn.commit()
+    conn.close()
