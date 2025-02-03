@@ -65,10 +65,15 @@ class Button:
             if event.button == 1 and self.is_hovered:  # Если это левая кнопка и мышь наведена
                 self.action()  # Вызываем связанную функцию
 
+def open_levels():
+    global menu_state  # Делаем переменную глобальной, чтоб мы могли ее изменить
+    menu_state = "LEVEL_MENU"  # Переключаем в меню уровней
+    print("Открыто меню уровней")
 
-def start_game():
-    main.game()
-
+def load_level(level):
+    print(f"Загрузка уровня {level}")
+    global menu_state  # Делаем переменную глобальной, чтоб мы могли ее изменить
+    menu_state = "MENU"
 
 def open_settings():
     print("Настройки")
@@ -100,11 +105,31 @@ def draw_rating_screen():
             break
     back_button.draw(screen)
 
+def draw_level_menu():
+    """
+    Отрисовывает меню выбора уровня.
+    """
+    screen.fill(BLACK)  # Заполняем экран черным цветом
+    draw_text(screen, "Уровни", 40, WIDTH // 2, 50, WHITE)  # Заголовок экрана
+    level1_button.draw(screen)  # Отрисовка кнопки уровня 1
+    level2_button.draw(screen)  # Отрисовка кнопки уровня 2
+    level3_button.draw(screen)  # Отрисовка кнопки уровня 3
+    boss_button.draw(screen)  # Отрисовка кнопки уровня с боссом
+    back_button.draw(screen)  # Кнопка "Назад"
 
-play_button = Button(WIDTH // 2 - 100, 200, 200, 50, "Играть", start_game)  # Кнопка Играть
-settings_button = Button(WIDTH // 2 - 100, 300, 200, 50, "Настройки", open_settings)  # Кнопка Настройки
-rating_button = Button(WIDTH // 2 - 100, 400, 200, 50, "Рейтинг", open_rating)  # Кнопка Рейтинг
+
+play_button = Button(WIDTH // 2 - 100, 200, 200, 50, "Играть", open_levels)  # Кнопка Играть
+rating_button = Button(WIDTH // 2 - 100, 300, 200, 50, "Рейтинг", open_rating)  # Кнопка Рейтинг
 back_button = Button(WIDTH // 2 - 100, 500, 200, 50, "Назад", lambda: set_menu_state("MENU"))  # Кнопка "Назад" в меню
+
+level1_button = Button(WIDTH // 2 - 100, 100, 200, 50, "Уровень 1",
+                       lambda: main.lv1())
+level2_button = Button(WIDTH // 2 - 100, 200, 200, 50, "Уровень 2",
+                       lambda: main.lv2())
+level3_button = Button(WIDTH // 2 - 100, 300, 200, 50, "Уровень 3",
+                       lambda: main.lv3())
+boss_button = Button(WIDTH // 2 - 100, 400, 200, 50, "Босс",
+                     lambda: main.game())
 
 
 def set_menu_state(state):
@@ -116,7 +141,7 @@ menu_state = "MENU"
 running = True
 
 all_sprites = pygame.sprite.Group()
-all_sprites.add(c.anim_guy(500, (WIDTH // 2)))
+all_sprites.add(c.anim_guy((WIDTH // 2), 450))
 
 while running:
     # screen.blit(menu_background, (0, 0))
@@ -128,23 +153,30 @@ while running:
             running = False
         if menu_state == "MENU":
             play_button.handle_event(event)
-            settings_button.handle_event(event)
             rating_button.handle_event(event)
         elif menu_state == "RATING":
+            back_button.handle_event(event)
+        elif menu_state == "LEVEL_MENU":  # Если находимся в меню выбора уровней
+            level1_button.handle_event(event)  # Обрабатываем события кнопки "Уровень 1"
+            level2_button.handle_event(event)  # Обрабатываем события кнопки "Уровень 2"
+            level3_button.handle_event(event)  # Обрабатываем события кнопки "Уровень 3"
+            boss_button.handle_event(event)  # Обрабатываем события кнопки "Босс"
             back_button.handle_event(event)
 
     if menu_state == "MENU":
         # screen.blit(menu_background, (0, 0))
         screen.fill(BLACK)
         draw_text(screen, "Space Invaders", 60, WIDTH // 2, 50, GREEN)  # Заголовок меню
+        draw_text(screen, "9000", 60, WIDTH // 2, 110, GREEN)
         play_button.draw(screen)
-        settings_button.draw(screen)
         rating_button.draw(screen)
         all_sprites.update()
         all_sprites.draw(screen)
-
     elif menu_state == "RATING":  # Если в рейтинге
         draw_rating_screen()
+    elif menu_state == "LEVEL_MENU":  # Если находимся в меню выбора уровней
+        draw_level_menu()
+
 
     pygame.display.flip()
     clock.tick(30)
