@@ -1,140 +1,196 @@
 import pygame
 import sys
 
+# Инициализация Pygame
 pygame.init()
 
-WIDTH = 1280
-HEIGHT = 720
-FPS = 60
-WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
-RED = (255, 0, 0)
-GREEN = (0, 255, 0)
-BLUE = (0, 0, 255)
-BUTTON_COLOR = (100, 100, 100)
-BUTTON_HOVER_COLOR = (150, 150, 150)
+# Константы
+WIDTH = 1280  # Ширина окна
+HEIGHT = 720  # Высота окна
+FPS = 60  # Частота кадров в секунду
+WHITE = (255, 255, 255)  # Белый цвет
+BLACK = (0, 0, 0)  # Черный цвет
+RED = (255, 0, 0)  # Красный цвет
+GREEN = (0, 255, 0)  # Зеленый цвет
+BLUE = (0, 0, 255)  # Синий цвет
+BUTTON_COLOR = (100, 100, 100)  # Цвет кнопки
+BUTTON_HOVER_COLOR = (150, 150, 150)  # Цвет кнопки при наведении
+BUTTON_WIDTH = 200  # Ширина кнопок
+BUTTON_HEIGHT = 50  # Высота кнопок
 
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
-menu_background = pygame.image.load("fonmenu_space_invaders.jpg")
-pygame.display.set_caption("Space Invaders Menu")
-clock = pygame.time.Clock()
+# Настройки окна
+screen = pygame.display.set_mode((WIDTH, HEIGHT))  # Создание окна
+try:
+    menu_background = pygame.image.load("fonmenu_space_invaders.jpg")  # Загрузка фона
+except pygame.error as e:
+    print(f"Error loading background image: {e}")
+    menu_background = None  # Если не удалось загрузить фон, то он будет None
+pygame.display.set_caption("Space Invaders Menu")  # Заголовок окна
+clock = pygame.time.Clock()  # Игровые часы
 
-font = pygame.font.Font(pygame.font.match_font('arial'), 30)
+# Шрифты
+font = pygame.font.Font(pygame.font.match_font('arial'), 30)  # Шрифт для текста
 
+# Функции для работы с рекордами (пока не используются)
 def load_scores():
-    return dict()
+    # Загрузка рекордов из файла (пока не используется)
+    return {"best_score": 0, "last_score": 0}  # Возвращаем начальные значения
 
-def save_scores():
+def save_scores(scores):
+    # Сохранение рекордов в файл (пока не используется)
     pass
 
-scores = load_scores()  # Загружаем данные
-last_score = scores.get("last_score", 0)  # Получаем последний счет
+# Загрузка рекордов
+scores = load_scores()  # Загружаем начальные рекорды
 best_score = scores.get("best_score", 0)  # Получаем лучший счет
+last_score = scores.get("last_score", 0)  # Получаем последний счет
 
-
+# Функция для отрисовки текста
 def draw_text(surf, text, size, x, y, color):
-    font = pygame.font.Font(pygame.font.match_font('arial'), size)
-    text_surface = font.render(text, True, color)
-    text_rect = text_surface.get_rect()
-    text_rect.midtop = (x, y)
-    surf.blit(text_surface, text_rect)
+    font = pygame.font.Font(pygame.font.match_font('arial'), size)  # Загрузка шрифта
+    text_surface = font.render(text, True, color)  # Рендеринг текста
+    text_rect = text_surface.get_rect()  # Получаем прямоугольник для текста
+    text_rect.midtop = (x, y)  # Устанавливаем положение текста
+    surf.blit(text_surface, text_rect)  # Рисуем текст на поверхности
 
 
+# Класс для кнопок
 class Button:
     def __init__(self, x, y, width, height, text, action, color=BUTTON_COLOR, hover_color=BUTTON_HOVER_COLOR):
         self.rect = pygame.Rect(x, y, width, height)  # Прямоугольник кнопки
-        self.text = text  # Текст
-        self.action = action  # Функция при нажатии
-        self.color = color  # Цвет
-        self.hover_color = hover_color  # Цвет при наведении
-        self.is_hovered = False  # Флаг для отслеживания наведения мыши
-
+        self.text = text  # Текст кнопки
+        self.action = action  # Функция, выполняемая при нажатии
+        self.color = color  # Цвет кнопки
+        self.hover_color = hover_color  # Цвет кнопки при наведении
+        self.is_hovered = False  # Флаг наведения мыши
 
     def draw(self, surface):
-        if self.is_hovered:  # Если мышь наведена, то рисуем цветом наведения
-            pygame.draw.rect(surface, self.hover_color, self.rect)
-        else:  # Иначе рисуем обычным цветом
-            pygame.draw.rect(surface, self.color, self.rect)
-        draw_text(surface, self.text, 24, self.rect.centerx, self.rect.y + 10, WHITE)  # Рисуем текст кнопки
-
+        if self.is_hovered:  # Если мышь наведена на кнопку
+            pygame.draw.rect(surface, self.hover_color, self.rect)  # Рисуем кнопку с цветом наведения
+        else:
+            pygame.draw.rect(surface, self.color, self.rect)  # Рисуем кнопку обычным цветом
+        draw_text(surface, self.text, 24, self.rect.centerx, self.rect.y + 10, WHITE)  # Рисуем текст на кнопке
 
     def handle_event(self, event):
-        if event.type == pygame.MOUSEMOTION:
+        if event.type == pygame.MOUSEMOTION:  # Если мышь двигается
             self.is_hovered = self.rect.collidepoint(event.pos)  # Проверяем, наведена ли мышь
-        if event.type == pygame.MOUSEBUTTONDOWN:  # Если нажали кнопку мыши
-            if event.button == 1 and self.is_hovered:  # Если это левая кнопка и мышь наведена
-                self.action()  # Вызываем связанную функцию
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:  # Если нажата левая кнопка мыши
+            if self.is_hovered:  # Если мышь наведена на кнопку
+                self.action()  # Выполняем действие, связанное с кнопкой
 
-
+# Функции для действий кнопок
 def start_game():
-    global last_score
-    global best_score
-    # В реальной игре здесь будет вызов кода игры
-    # Для примера добавим случайный счет и обновление рекордов
+    global best_score, last_score  # Делаем переменные глобальными, чтоб мы могли их изменить
+    # Имитация результата игры
     last_score = int(pygame.time.get_ticks() / 1000) % 1000  # Имитация результата игры
     if last_score > best_score:
-        best_score = last_score
-    scores["last_score"] = last_score
-    scores["best_score"] = best_score
-    save_scores(scores)  # Сохраняем результаты
+        best_score = last_score  # Обновляем лучший счет, если новый результат лучше
+    scores["best_score"] = best_score  # Сохраняем лучший счет
+    scores["last_score"] = last_score  # Сохраняем последний счет
+    save_scores(scores)  # Сохраняем рекорды в файл
     print("Запуск игры!")
 
-
-def open_settings():
-    print("Настройки")
-
+def open_levels():
+    global menu_state  # Делаем переменную глобальной, чтоб мы могли ее изменить
+    menu_state = "LEVEL_MENU"  # Переключаем в меню уровней
+    print("Открыто меню уровней")
 
 def open_rating():
-    global menu_state  # Делаем menu_state глобальной
-    menu_state = "RATING"  # Переключаемся в состояние рейтинга
-    print("Рейтинг")
-
-
-def draw_rating_screen():
-    screen.fill(BLACK)
-    draw_text(screen, "Рейтинг", 40, WIDTH // 2, 50, WHITE)
-    draw_text(screen, f"Последняя игра: {last_score}", 30, WIDTH // 2, 150, WHITE)
-    draw_text(screen, f"Лучший результат: {best_score}", 30, WIDTH // 2, 200, WHITE)
-    back_button.draw(screen)
-
-
-play_button = Button(WIDTH // 2 - 100, 200, 200, 50, "Играть", start_game)  # Кнопка Играть
-settings_button = Button(WIDTH // 2 - 100, 300, 200, 50, "Настройки", open_settings)  # Кнопка Настройки
-rating_button = Button(WIDTH // 2 - 100, 400, 200, 50, "Рейтинг", open_rating)  # Кнопка Рейтинг
-back_button = Button(WIDTH // 2 - 100, 500, 200, 50, "Назад", lambda: set_menu_state("MENU"))  # Кнопка "Назад" в меню
-
+    global menu_state  # Делаем переменную глобальной, чтоб мы могли ее изменить
+    menu_state = "RATING"  # Переключаем в меню рейтинга
+    print("Открыто меню рейтинга")
 
 def set_menu_state(state):
-    global menu_state
-    menu_state = state
+    global menu_state  # Делаем переменную глобальной, чтоб мы могли ее изменить
+    menu_state = state  # Устанавливаем состояние
 
-menu_state = "MENU"
+def draw_rating_screen():
+    """
+    Отрисовывает экран рейтинга.
+    """
+    screen.fill(BLACK)  # Заполняем экран черным цветом
+    draw_text(screen, "Рейтинг", 40, WIDTH // 2, 50, WHITE)  # Заголовок экрана
+    draw_text(screen, f"Лучший результат: {best_score}", 30, WIDTH // 2, 150, WHITE)  # Отображение лучшего счета
+    draw_text(screen, f"Последняя игра: {last_score}", 30, WIDTH // 2, 200, WHITE)  # Отображение последнего результата
+    back_button.draw(screen)  # Кнопка "Назад"
 
+def draw_level_menu():
+    """
+    Отрисовывает меню выбора уровня.
+    """
+    screen.fill(BLACK)  # Заполняем экран черным цветом
+    draw_text(screen, "Уровни", 40, WIDTH // 2, 50, WHITE)  # Заголовок экрана
+    level1_button.draw(screen)  # Отрисовка кнопки уровня 1
+    level2_button.draw(screen)  # Отрисовка кнопки уровня 2
+    level3_button.draw(screen)  # Отрисовка кнопки уровня 3
+    boss_button.draw(screen)  # Отрисовка кнопки уровня с боссом
+    back_button.draw(screen)  # Кнопка "Назад"
+
+def load_level(level):
+    print(f"Загрузка уровня {level}")
+    global menu_state  # Делаем переменную глобальной, чтоб мы могли ее изменить
+    menu_state = "MENU"  # Возвращаемся в главное меню
+
+
+# Создание кнопок
+# Кнопки главного меню
+play_button = Button(WIDTH // 2 - BUTTON_WIDTH // 2, 200, BUTTON_WIDTH, BUTTON_HEIGHT, "Играть", start_game)
+levels_button = Button(WIDTH // 2 - BUTTON_WIDTH // 2, 300, BUTTON_WIDTH, BUTTON_HEIGHT, "Уровни", open_levels)
+rating_button = Button(WIDTH // 2 - BUTTON_WIDTH // 2, 400, BUTTON_WIDTH, BUTTON_HEIGHT, "Рейтинг", open_rating)
+
+# Кнопки меню уровней
+level1_button = Button(100, HEIGHT // 2 - 70, BUTTON_WIDTH, BUTTON_HEIGHT, "Уровень 1",
+                       lambda: load_level(1))
+level2_button = Button(400, HEIGHT // 2 - 70, BUTTON_WIDTH, BUTTON_HEIGHT, "Уровень 2",
+                       lambda: load_level(2))
+level3_button = Button(700, HEIGHT // 2 - 70, BUTTON_WIDTH, BUTTON_HEIGHT, "Уровень 3",
+                       lambda: load_level(3))
+boss_button = Button(1000, HEIGHT // 2 - 70, BUTTON_WIDTH, BUTTON_HEIGHT, "Босс",
+                     lambda: load_level("boss"))
+
+# Кнопка "Назад"
+back_button = Button(WIDTH // 2 - BUTTON_WIDTH // 2, 550, BUTTON_WIDTH, BUTTON_HEIGHT, "Назад",
+                     lambda: set_menu_state("MENU"))
+
+# Главные переменные
+menu_state = "MENU"  # Начальное состояние меню: "MENU", "RATING", "LEVEL_MENU"
+
+# Главный игровой цикл
 running = True
-
 while running:
-    # screen.blit(menu_background, (0, 0))
-    clock.tick(FPS)
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
+    for event in pygame.event.get():  # Получаем все события
+        if event.type == pygame.QUIT:  # Если событие выхода, то выходим
             running = False
-        if menu_state == "MENU":
-            play_button.handle_event(event)
-            settings_button.handle_event(event)
-            rating_button.handle_event(event)
-        elif menu_state == "RATING":
-            back_button.handle_event(event)
+        if menu_state == "MENU":  # Если находимся в главном меню
+            play_button.handle_event(event)  # Обрабатываем события кнопки "Играть"
+            levels_button.handle_event(event)  # Обрабатываем события кнопки "Уровни"
+            rating_button.handle_event(event)  # Обрабатываем события кнопки "Рейтинг"
+        elif menu_state == "RATING":  # Если находимся в меню рейтинга
+            back_button.handle_event(event)  # Обрабатываем события кнопки "Назад"
+        elif menu_state == "LEVEL_MENU":  # Если находимся в меню выбора уровней
+            level1_button.handle_event(event)  # Обрабатываем события кнопки "Уровень 1"
+            level2_button.handle_event(event)  # Обрабатываем события кнопки "Уровень 2"
+            level3_button.handle_event(event)  # Обрабатываем события кнопки "Уровень 3"
+            boss_button.handle_event(event)  # Обрабатываем события кнопки "Босс"
+            back_button.handle_event(event)  # Обрабатываем события кнопки "Назад"
 
-    if menu_state == "MENU":
+    # Отрисовка
+    if menu_background:  # Если загружен фон, то рисуем его
         screen.blit(menu_background, (0, 0))
-        draw_text(screen, "Space Invaders Menu", 60, WIDTH // 2, 50, WHITE)  # Заголовок меню
-        play_button.draw(screen)
-        settings_button.draw(screen)
-        rating_button.draw(screen)
-    elif menu_state == "RATING":  # Если в рейтинге
-        draw_rating_screen()
+    else:
+        screen.fill(BLACK)  # Иначе, заливаем экран черным цветом
 
-    pygame.display.flip()
+    if menu_state == "MENU":  # Если находимся в главном меню
+        play_button.draw(screen)  # Рисуем кнопку "Играть"
+        levels_button.draw(screen)  # Рисуем кнопку "Уровни"
+        rating_button.draw(screen)  # Рисуем кнопку "Рейтинг"
+    elif menu_state == "RATING":  # Если находимся в меню рейтинга
+        draw_rating_screen()  # Рисуем экран рейтинга
+    elif menu_state == "LEVEL_MENU":  # Если находимся в меню выбора уровней
+        draw_level_menu()  # Рисуем меню выбора уровней
 
-pygame.quit()
-sys.exit()
+    pygame.display.flip()  # Обновляем экран
+    clock.tick(FPS)  # Контроль FPS
+
+pygame.quit()  # Выход из Pygame
+sys.exit()  # Выход из системы
