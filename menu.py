@@ -105,9 +105,6 @@ def set_menu_state(state):
     menu_state = state  # Устанавливаем состояние
 
 def draw_rating_screen():
-    """
-    Отрисовывает экран рейтинга.
-    """
     screen.fill(BLACK)  # Заполняем экран черным цветом
     draw_text(screen, "Рейтинг", 40, WIDTH // 2, 50, WHITE)  # Заголовок экрана
     draw_text(screen, f"Лучший результат: {best_score}", 30, WIDTH // 2, 150, WHITE)  # Отображение лучшего счета
@@ -115,9 +112,6 @@ def draw_rating_screen():
     back_button.draw(screen)  # Кнопка "Назад"
 
 def draw_level_menu():
-    """
-    Отрисовывает меню выбора уровня.
-    """
     screen.fill(BLACK)  # Заполняем экран черным цветом
     draw_text(screen, "Уровни", 40, WIDTH // 2, 50, WHITE)  # Заголовок экрана
     level1_button.draw(screen)  # Отрисовка кнопки уровня 1
@@ -146,7 +140,7 @@ level2_button = Button(400, HEIGHT // 2 - 70, BUTTON_WIDTH, BUTTON_HEIGHT, "Ур
 level3_button = Button(700, HEIGHT // 2 - 70, BUTTON_WIDTH, BUTTON_HEIGHT, "Уровень 3",
                        lambda: load_level(3))
 boss_button = Button(1000, HEIGHT // 2 - 70, BUTTON_WIDTH, BUTTON_HEIGHT, "Босс",
-                     lambda: load_level("boss"))
+                     lambda: load_level("boss"), RED)
 
 # Кнопка "Назад"
 back_button = Button(WIDTH // 2 - BUTTON_WIDTH // 2, 550, BUTTON_WIDTH, BUTTON_HEIGHT, "Назад",
