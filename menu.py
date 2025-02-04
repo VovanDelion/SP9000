@@ -129,7 +129,7 @@ level2_button = Button(WIDTH // 2 - 100, 200, 200, 50, "Уровень 2",
 level3_button = Button(WIDTH // 2 - 100, 300, 200, 50, "Уровень 3",
                        lambda: main.lv3())
 boss_button = Button(WIDTH // 2 - 100, 400, 200, 50, "Босс",
-                     lambda: main.game())
+                     lambda: main.game(), "red", (255, 150, 150))
 
 
 def set_menu_state(state):
